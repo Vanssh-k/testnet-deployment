@@ -42,6 +42,7 @@ ARG AWS_REGION
 ARG AWS_S3_BUCKET
 ARG GITHUB_TOKEN
 ARG IPFS_ENDPOINT
+ARG ROUTE_ACCESS_TOKEN
 
 ENV AWS_SECRET_KEY  $AWS_SECRET_KEY
 ENV AWS_ACCESS_KEY  $AWS_ACCESS_KEY
@@ -49,6 +50,7 @@ ENV AWS_REGION      $AWS_REGION
 ENV AWS_S3_BUCKET   $AWS_S3_BUCKET
 ENV GITHUB_TOKEN    $GITHUB_TOKEN
 ENV IPFS_ENDPOINT   $IPFS_ENDPOINT
+ENV ROUTE_ACCESS_TOKEN $ROUTE_ACCESS_TOKEN
 
 RUN mkdir -p ${IPFS_PATH} 
 
@@ -58,7 +60,7 @@ RUN mkdir -p ${IPFS_PATH}
 # configure ipfs for production
 RUN ipfs init -p server
     
-RUN ipfs config Datastore.StorageMax 2TB && \
+RUN ipfs config Datastore.StorageMax 1EB && \
     ipfs config Routing.Type none && \
     ipfs bootstrap add /ip4/3.110.235.23/tcp/4001/p2p/12D3KooWGLVpG6uUMZoKhAdyJGbsqhPyea4qPA8CDqBxaiPhXe3e
 
@@ -70,7 +72,7 @@ RUN apt update -y && \
     apt install -y nodejs && \
     echo "NODE VERSION $(node --version)"
 
-RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3/node-authentication-middleware.git proxy && \
+RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3/ipfs-node-auth.git proxy && \
     cd proxy && \
     apt install -y npm && \
     npm install && \
@@ -83,7 +85,7 @@ RUN apt update && \
     apt install nginx -y && \
     apt install -y curl ufw && \
     ufw allow ssh && \
-    ufw allow 'Nginx Full' 
+    ufw allow 'Nginx Full'
 
 COPY config /etc/nginx/sites-available/default
 
@@ -99,7 +101,7 @@ ENV NGINX_PORT 80
 
 EXPOSE ${SWARM_PORT}
 # This may introduce security risk to expose API_PORT public
-#EXPOSE ${API_PORT}
+EXPOSE ${API_PORT}
 #EXPOSE ${GATEWAY_PORT}
 #EXPOSE ${PROXY_PORT}
 EXPOSE ${NGINX_PORT}
