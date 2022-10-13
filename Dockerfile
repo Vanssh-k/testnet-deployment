@@ -65,9 +65,11 @@ RUN apt update -y && \
     apt install -y nodejs && \
     echo "NODE VERSION $(node --version)"
 
-RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3/ipfs-node-auth.git proxy && \
-    cd proxy && \
-    apt install -y npm && \
+RUN apt install -y npm
+
+RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3/ipfs-node-auth.git proxy
+    
+RUN cd proxy && \
     npm install && \
     npm install -g pm2
 
