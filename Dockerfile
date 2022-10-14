@@ -55,7 +55,7 @@ RUN ipfs init -p server
     
 RUN ipfs config Datastore.StorageMax 1EB && \
     ipfs config Routing.Type none && \
-    ipfs bootstrap add /ip4/3.110.235.23/tcp/4001/p2p/12D3KooWGLVpG6uUMZoKhAdyJGbsqhPyea4qPA8CDqBxaiPhXe3e
+    ipfs bootstrap rm --all
 
 RUN ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"${AWS_ACCESS_KEY}\",\"bucket\":\"${AWS_S3_BUCKET}\",\"region\":\"${AWS_REGION}\",\"secretKey\":\"${AWS_SECRET_KEY}\",\"type\":\"s3ds\"},\"mountpoint\":\"/blocks\",\"prefix\":\"s3.datastore\",\"type\":\"measure\"},{\"child\": {\"compression\":\"none\",\"path\":\"datastore\",\"type\":\"levelds\"},\"mountpoint\": \"/\",\"prefix\":\"leveldb.datastore\",\"type\":\"measure\"}],\"type\":\"mount\"}"
 
@@ -65,11 +65,9 @@ RUN apt update -y && \
     apt install -y nodejs && \
     echo "NODE VERSION $(node --version)"
 
-RUN apt install -y npm
-
-RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3/ipfs-node-auth.git proxy
-    
-RUN cd proxy && \
+RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3/gateway-authentication.git proxy && \
+    cd proxy && \
+    apt install -y npm && \
     npm install && \
     npm install -g pm2
 
@@ -94,7 +92,7 @@ ENV SWARM_PORT 4001
 ENV PROXY_PORT 5050
 ENV NGINX_PORT 80
 
-# EXPOSE ${SWARM_PORT}
+EXPOSE ${SWARM_PORT}
 # This may introduce security risk to expose API_PORT public
 # EXPOSE ${API_PORT}
 #EXPOSE ${GATEWAY_PORT}
@@ -103,3 +101,4 @@ EXPOSE ${NGINX_PORT}
 
 # by default, run `ipfs daemon` to start as a running node
 ENTRYPOINT service nginx restart && pm2 start proxy/app.js && ipfs daemon
+# ENTRYPOINT service nginx restart && ipfs daemon
