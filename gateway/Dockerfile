@@ -59,12 +59,13 @@ RUN ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"
 RUN echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > $IPFS_PATH/datastore_spec
 
 RUN apt update -y && \
-    apt install -y nodejs && \
+    curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh && \
+    sudo bash /tmp/nodesource_setup.sh && \
+    sudo apt install nodejs && \
     echo "NODE VERSION $(node --version)"
 
 RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3/image-resize-microservice.git proxy && \
     cd proxy && \
-    apt install -y npm && \
     npm install && \
     npm run build && \
     npm install -g pm2
