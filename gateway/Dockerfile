@@ -56,6 +56,20 @@ RUN ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"
 
 RUN echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > $IPFS_PATH/datastore_spec
 
+RUN apt update -y && \
+    apt install -y nodejs && \
+    echo "NODE VERSION $(node --version)"
+
+RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3/ipfs-node-auth.git proxy && \
+    cd proxy && \
+    apt install -y npm && \
+    npm install && \
+    npm run build && \
+    npm install -g pm2
+
+RUN echo "PM2 VERSION -- $(pm2 --version)" && \
+    stat proxy/app.js
+
 RUN apt update && \
     apt install nginx -y && \
     apt install -y curl ufw && \
