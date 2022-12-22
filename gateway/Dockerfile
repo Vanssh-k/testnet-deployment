@@ -62,7 +62,7 @@ RUN apt update -y && \
     apt install -y nodejs && \
     echo "NODE VERSION $(node --version)"
 
-RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3/ipfs-node-auth.git proxy && \
+RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3/image-resize-microservice.git proxy && \
     cd proxy && \
     apt install -y npm && \
     npm install && \
@@ -95,5 +95,4 @@ ENV NGINX_PORT 80
 #EXPOSE ${GATEWAY_PORT}
 EXPOSE ${NGINX_PORT}
 
-# ENTRYPOINT service nginx restart && pm2 start proxy/app.js && ipfs daemon
-ENTRYPOINT service nginx restart && ipfs daemon
+ENTRYPOINT service nginx restart && pm2 start proxy/dist/index.js && ipfs daemon
