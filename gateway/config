@@ -6,7 +6,7 @@ server {
 
         server_name _;
 
-        location /ipfs/(\w+)[?]((w=\d+)&(h=\d+)|(h=\d+)&(w=\d+))/ig {
+        location ~ "^/ipfs/([a-zA-Z0-9]{20,})$" {
             proxy_set_header Host $host;
             proxy_set_header X-Forwarded-For $remote_addr;
             proxy_pass http://localhost:8090;
