@@ -6,18 +6,16 @@ server {
 
         server_name _;
 
+        location ~/ipfs/QmTsNPHWbLUN5NnJPz2o2CvMc8BYicg9cenU8XHzKBwYrv {
+            deny all;
+        }
+
         location ~ "^/ipfs/(.+)$" {
             proxy_set_header Host $host;
             proxy_set_header X-Forwarded-For $remote_addr;
             if ($arg_w){
                 proxy_pass http://localhost:8090;
             }
-            proxy_pass http://localhost:8080;
-        }
-
-        location /ipfs/ {
-            proxy_set_header Host $host;
-            proxy_set_header X-Forwarded-For $remote_addr;
             proxy_pass http://localhost:8080;
         }
 
