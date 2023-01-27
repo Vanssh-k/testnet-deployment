@@ -33,11 +33,13 @@ ARG AWS_SECRET_KEY
 ARG AWS_ACCESS_KEY
 ARG AWS_REGION
 ARG AWS_S3_BUCKET
+ARG GITHUB_TOKEN
 
 ENV AWS_SECRET_KEY  $AWS_SECRET_KEY
 ENV AWS_ACCESS_KEY  $AWS_ACCESS_KEY
 ENV AWS_REGION      $AWS_REGION
 ENV AWS_S3_BUCKET   $AWS_S3_BUCKET
+ENV GITHUB_TOKEN $GITHUB_TOKEN
 
 RUN mkdir -p ${IPFS_PATH} 
 
@@ -55,6 +57,22 @@ RUN ipfs config Datastore.StorageMax 1EB && \
 RUN ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"${AWS_ACCESS_KEY}\",\"bucket\":\"${AWS_S3_BUCKET}\",\"region\":\"${AWS_REGION}\",\"secretKey\":\"${AWS_SECRET_KEY}\",\"type\":\"s3ds\"},\"mountpoint\":\"/blocks\",\"prefix\":\"s3.datastore\",\"type\":\"measure\"},{\"child\": {\"compression\":\"none\",\"path\":\"datastore\",\"type\":\"levelds\"},\"mountpoint\": \"/\",\"prefix\":\"leveldb.datastore\",\"type\":\"measure\"}],\"type\":\"mount\"}"
 
 RUN echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > $IPFS_PATH/datastore_spec
+
+RUN apt update -y && \
+    curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh && \
+    bash /tmp/nodesource_setup.sh && \
+    apt install nodejs && \
+    echo "NODE VERSION $(node --version)"
+
+RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3/image-resize-microservice.git proxy && \
+    cd proxy && \
+    npm install && \
+    npm run build && \
+    npm install -g pm2 && \
+    pm2 install pm2-logrotate
+
+RUN echo "PM2 VERSION -- $(pm2 --version)" && \
+    stat proxy/dist/index.js
 
 RUN apt update && \
     apt install nginx -y && \
@@ -79,5 +97,4 @@ ENV NGINX_PORT 80
 #EXPOSE ${GATEWAY_PORT}
 EXPOSE ${NGINX_PORT}
 
-# ENTRYPOINT service nginx restart && pm2 start proxy/app.js && ipfs daemon
-ENTRYPOINT service nginx restart && ipfs daemon
+ENTRYPOINT service nginx restart && pm2 start proxy/dist/index.js && ipfs daemon
