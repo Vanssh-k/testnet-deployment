@@ -82,6 +82,7 @@ RUN apt update && \
     ufw allow ssh && \
     ufw allow 'Nginx Full'
 
+COPY robots.txt /home/robots.txt
 COPY config /etc/nginx/sites-available/default
 
 # start nginx and verify config update

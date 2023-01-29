@@ -6,6 +6,10 @@ server {
 
         server_name _;
 
+        location /robots.txt {
+            alias /home/robots.txt;
+        }
+
         location ~/ipfs/QmTsNPHWbLUN5NnJPz2o2CvMc8BYicg9cenU8XHzKBwYrv {
             deny all;
         }
