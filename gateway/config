@@ -13,8 +13,23 @@ server {
         location ~/ipfs/QmTsNPHWbLUN5NnJPz2o2CvMc8BYicg9cenU8XHzKBwYrv {
             deny all;
         }
+        location ~/ipfs/QmaJdLzG6x16wWAsrB6brCzUxTkMmJ8HQYp6RABbY64Lx4 {
+            deny all;
+        }
+        location ~/ipfs/QmUd7a5Xtjjpu1go5wJ5Z2kBaFVavHYJNG1PQdLw65vaGX {
+            deny all;
+        }
 
         location ~ "^/ipfs/(.+)$" {
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-For $remote_addr;
+            if ($arg_w){
+                proxy_pass http://localhost:8090;
+            }
+            proxy_pass http://localhost:8080;
+        }
+
+        location ~ "^/ipns/(.+)$" {
             proxy_set_header Host $host;
             proxy_set_header X-Forwarded-For $remote_addr;
             if ($arg_w){
