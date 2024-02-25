@@ -3,18 +3,19 @@ services:
   provider-service:
     build: .
     ports:
-      - "3103:3103"
-      - "3105:3105"
-      - "50617:50617"
-      - "3102:3102"
+      - "${PORT_3103}:${PORT_3103}"
+      - "${PORT_3105}:${PORT_3105}"
+      - "${PORT_3102}:${PORT_3102}"
+      - "${PORT_50617}:${PORT_50617}"
     environment:
-      - ANNOUNCE_MULTIADDR=/ip4/${IP_ADDRESS}/tcp/3105/http
-      - LISTEN_MULTIADDR=/ip4/0.0.0.0/tcp/3105
+      - ANNOUNCE_MULTIADDR=/ip4/${IP_ADDRESS}/tcp/${PORT_3105}/http
+      - LISTEN_MULTIADDR=/ip4/0.0.0.0/tcp/${PORT_3105}
       - PUBLISHER_KIND=libp2phttp
-      - RETRIEVAL_MULTIADDR=/ip4/${IP_ADDRESS}/tcp/3103
+      - RETRIEVAL_MULTIADDR=/ip4/${IP_ADDRESS}/tcp/${PORT_3103}
       - DIRECT_ANNOUNCE_URL=https://cid.contact/ingest/announce
-      - DELEGATED_ROUTING_MULTIADDR=/ip4/0.0.0.0/tcp/50617
+      - DELEGATED_ROUTING_MULTIADDR=/ip4/0.0.0.0/tcp/${PORT_50617}
       - DELEGATED_ROUTING_PROVIDER_ID=${DELEGATED_ROUTING_PROVIDER_ID}
       - DELEGATED_ROUTING_CHUNK_SIZE=10000
       - DELEGATED_ROUTING_SNAPSHOT_SIZE=100000
       - DELEGATED_ROUTING_ADDRS=/ip4/${IP_ADDRESS_KUBO}/tcp/4001
+      - ADMIN_SERVER_MULTIADDR=/ip4/0.0.0.0/tcp/${PORT_3102}
