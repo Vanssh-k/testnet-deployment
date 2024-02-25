@@ -1,21 +1,41 @@
 version: '3.8'
 services:
-  provider-service:
+  provider-service1:
     build: .
     ports:
-      - "${PORT_3103}:${PORT_3103}"
-      - "${PORT_3105}:${PORT_3105}"
-      - "${PORT_3102}:${PORT_3102}"
-      - "${PORT_50617}:${PORT_50617}"
+      - "3103:3103"
+      - "3105:3105"
+      - "3102:3102"
+      - "50617:50617"
     environment:
-      - ANNOUNCE_MULTIADDR=/ip4/${IP_ADDRESS}/tcp/${PORT_3105}/http
-      - LISTEN_MULTIADDR=/ip4/0.0.0.0/tcp/${PORT_3105}
+      - ANNOUNCE_MULTIADDR=/ip4/${IP_ADDRESS_SELF}/tcp/3105/http
+      - LISTEN_MULTIADDR=/ip4/0.0.0.0/tcp/3105
       - PUBLISHER_KIND=libp2phttp
-      - RETRIEVAL_MULTIADDR=/ip4/${IP_ADDRESS}/tcp/${PORT_3103}
+      - RETRIEVAL_MULTIADDR=/ip4/${IP_ADDRESS_SELF}/tcp/3103
       - DIRECT_ANNOUNCE_URL=https://cid.contact/ingest/announce
-      - DELEGATED_ROUTING_MULTIADDR=/ip4/0.0.0.0/tcp/${PORT_50617}
-      - DELEGATED_ROUTING_PROVIDER_ID=${DELEGATED_ROUTING_PROVIDER_ID}
+      - DELEGATED_ROUTING_MULTIADDR=/ip4/0.0.0.0/tcp/50617
+      - DELEGATED_ROUTING_PROVIDER_ID=${DELEGATED_ROUTING_PROVIDER_ID1}
       - DELEGATED_ROUTING_CHUNK_SIZE=10000
       - DELEGATED_ROUTING_SNAPSHOT_SIZE=100000
-      - DELEGATED_ROUTING_ADDRS=/ip4/${IP_ADDRESS_KUBO}/tcp/4001
-      - ADMIN_SERVER_MULTIADDR=/ip4/0.0.0.0/tcp/${PORT_3102}
+      - DELEGATED_ROUTING_ADDRS=/ip4/${IP_ADDRESS_KUBO1}/tcp/4001
+      - ADMIN_SERVER_MULTIADDR=/ip4/0.0.0.0/tcp/3102
+
+  provider-service2:
+    build: .
+    ports:
+      - "31032:3103"
+      - "31052:3105"
+      - "31022:3102"
+      - "52617:50617"
+    environment:
+      - ANNOUNCE_MULTIADDR=/ip4/${IP_ADDRESS_SELF}/tcp/3105/http
+      - LISTEN_MULTIADDR=/ip4/0.0.0.0/tcp/3105
+      - PUBLISHER_KIND=libp2phttp
+      - RETRIEVAL_MULTIADDR=/ip4/${IP_ADDRESS_SELF}/tcp/3103
+      - DIRECT_ANNOUNCE_URL=https://cid.contact/ingest/announce
+      - DELEGATED_ROUTING_MULTIADDR=/ip4/0.0.0.0/tcp/50617
+      - DELEGATED_ROUTING_PROVIDER_ID=${DELEGATED_ROUTING_PROVIDER_ID2}
+      - DELEGATED_ROUTING_CHUNK_SIZE=100
+      - DELEGATED_ROUTING_SNAPSHOT_SIZE=1000
+      - DELEGATED_ROUTING_ADDRS=/ip4/${IP_ADDRESS_KUBO2}/tcp/4001
+      - ADMIN_SERVER_MULTIADDR=/ip4/0.0.0.0/tcp/3102
