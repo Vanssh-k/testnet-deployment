@@ -34,7 +34,7 @@ ENV AWS_ACCESS_KEY  $AWS_ACCESS_KEY
 ENV AWS_REGION      $AWS_REGION
 ENV AWS_S3_BUCKET   $AWS_S3_BUCKET
 
-RUN mkdir -p ${c} 
+RUN mkdir -p ${IPFS_PATH} 
 
 # no need to for this as docker runs in root user mode
 RUN chown ubuntu:ubuntu ${IPFS_PATH}
