@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  ipfs-ipni-service:
+  ipns-ipni-service:
     build: .
     environment:
       - ANNOUNCE_MULTIADDR=/ip4/${IP_ADDRESS_SELF}/tcp/3105/http
