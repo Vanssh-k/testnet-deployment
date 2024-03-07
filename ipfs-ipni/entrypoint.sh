@@ -2,10 +2,11 @@
 
 # Initialize IPFS
 ipfs init
+
 # Configure IPFS with custom settings
 ipfs config Datastore.StorageMax 1EB && \
-    ipfs bootstrap rm --all &&\
-    ipfs config --json Addresses.API '/ip4/0.0.0.0/tcp/5001'
+    ipfs bootstrap rm --all && \
+    ipfs config --json Addresses.API '"/ip4/0.0.0.0/tcp/5001"'
 
 
 ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"${AWS_ACCESS_KEY}\",\"bucket\":\"${AWS_S3_BUCKET}\",\"region\":\"${AWS_REGION}\",\"secretKey\":\"${AWS_SECRET_KEY}\",\"type\":\"s3ds\"},\"mountpoint\":\"/blocks\",\"prefix\":\"s3.datastore\",\"type\":\"measure\"},{\"child\": {\"compression\":\"none\",\"path\":\"datastore\",\"type\":\"levelds\"},\"mountpoint\": \"/\",\"prefix\":\"leveldb.datastore\",\"type\":\"measure\"}],\"type\":\"mount\"}"

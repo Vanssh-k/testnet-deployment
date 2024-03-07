@@ -12,10 +12,10 @@ services:
       - DELEGATED_ROUTING_CHUNK_SIZE=10000
       - DELEGATED_ROUTING_SNAPSHOT_SIZE=100000
       - DELEGATED_ROUTING_ADDRS=/ip4/${IP_ADDRESS_SELF}/tcp/4001
-      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
-      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
-      - AWS_REGION=${AWS_REGION}
-      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      # - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      # - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      # - AWS_REGION=${AWS_REGION}
+      # - AWS_S3_BUCKET=${AWS_S3_BUCKET}
 
     ports:
       - "4001:4001"
@@ -25,9 +25,12 @@ services:
       - "3105:3105"
       - "3102:3102"
       - "50617:50617"
+      - "8000:8000"
     volumes:
+      - publisher:/app/publisher
       - ipfs_data:/data/ipfs
       - ipni_data:/root/.index-provider
 volumes:
   ipfs_data:
   ipni_data:
+  publisher:
