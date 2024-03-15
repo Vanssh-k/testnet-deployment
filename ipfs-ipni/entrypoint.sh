@@ -5,7 +5,6 @@ ipfs init
 
 # Configure IPFS with custom settings
 ipfs config Datastore.StorageMax 1EB && \
-    ipfs bootstrap rm --all && \
     ipfs config --json Addresses.API '"/ip4/0.0.0.0/tcp/5001"'
 
 
