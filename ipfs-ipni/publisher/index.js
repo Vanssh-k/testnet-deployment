@@ -12,6 +12,7 @@ const DHT_ENDPOINT = 'http://localhost:5001/api/v0/routing/provide';
 const BATCH_SIZE = 1000;
 const COOLDOWN_PERIOD = 5000; // 20 seconds
 const SKIP_FIRST_N = 1054803; // Set this to the number of CIDs you want to skip
+const ACCESS_TOKEN = process.env.ROUTE_ACCESS_TOKEN;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -77,30 +78,45 @@ const publishRecordsWithCooldown = async () => {
 };
 
 app.get('/api/add_cid_record', async (req, res) => {
-  const cid = req.query.cid;
-  if (!cidListSet.has(cid)) {
-    cidListSet.add(cid);
-    await appendCIDToFile(cid);
-    await sendToDHT(cid);
-    res.status(200).send('CID added and published');
-  } else {
-    res.status(200).send('CID already exists');
+  const accessToken = req.headers['authorization']?.split(' ')[1]
+  if(accessToken===ACCESS_TOKEN) {
+    const cid = req.query.cid;
+    if (!cidListSet.has(cid)) {
+      cidListSet.add(cid);
+      await appendCIDToFile(cid);
+      await sendToDHT(cid);
+      res.status(200).send('CID added and published');
+    } else {
+      res.status(200).send('CID already exists');
+    }
+  } else{
+    res.status(403).send('Forbidden');
   }
 });
 
 app.get('/api/manual_publish_all_cid', async (req, res) => {
-  publishRecordsWithCooldown().then(() => {
-    res.status(200).send('Publishing started with cooldown');
-  });
+  const accessToken = req.headers['authorization']?.split(' ')[1]
+  if(accessToken===ACCESS_TOKEN) {
+    publishRecordsWithCooldown().then(() => {
+      res.status(200).send('Publishing started with cooldown');
+    });
+  } else{
+    res.status(403).send('Forbidden');
+  }
 });
 
 app.get('/api/republish_cid', async (req, res) => {
-  const cid = req.query.cid;
-  if (cidListSet.has(cid)) {
-    await sendToDHT(cid);
-    res.status(200).send('Republish started');
-  } else {
-    res.status(404).send('CID not found');
+  const accessToken = req.headers['authorization']?.split(' ')[1]
+  if(accessToken===ACCESS_TOKEN) {
+    const cid = req.query.cid;
+    if (cidListSet.has(cid)) {
+      await sendToDHT(cid);
+      res.status(200).send('Republish started');
+    } else {
+      res.status(404).send('CID not found');
+    }
+  } else{
+    res.status(403).send('Forbidden');
   }
 });
 
