@@ -1,10 +1,8 @@
 # Start from the official Go image
 FROM golang:1.22.0
 
-# Set maintainer label
 LABEL maintainer="Ravish <ravish@lighthouse.storage>"
 
-# Install necessary tools
 RUN apt-get update && apt-get install -y git curl jq && \
     # Clone IPFS and install the S3 plugin
     git clone https://github.com/ipfs/kubo && \
@@ -19,32 +17,24 @@ RUN apt-get update && apt-get install -y git curl jq && \
     # Install the IPNI service
     go install github.com/ipni/index-provider/cmd/provider@v0.14.2
 
-# Install Node.js
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs
-
-# After installing Node.js, verify it's installed
 RUN node -v && npm -v
+RUN npm i -g pm2
 
-# Copy the Node.js app files into the container
 COPY publisher/ /app/publisher/
-
-# Install app dependencies
 RUN cd /app/publisher && ls && npm install
 
 # Expose the port the Node.js app runs on
 # EXPOSE 8000
 
-CMD ["node", "index.js", "2> err.log", "> console.log", "&"]
+CMD ["pm2", "start", "index.js"]
 
 RUN ps aux
-# Copy the entrypoint script into the container
 COPY entrypoint.sh /entrypoint.sh
 
-# Make the entrypoint script executable
 RUN chmod +x /entrypoint.sh
 
-# Set environment variables for AWS configuration
 ENV IPFS_PATH=/data/ipfs \
     API_PORT=5001 \
     GATEWAY_PORT=8080 \
@@ -53,8 +43,5 @@ ENV IPFS_PATH=/data/ipfs \
 # Expose necessary ports
 # EXPOSE 4001 5001 8080 3103 3105 3102 50617
 
-# Set the working directory
 WORKDIR /data
-
-# Set the entrypoint script
 ENTRYPOINT ["/entrypoint.sh"]
