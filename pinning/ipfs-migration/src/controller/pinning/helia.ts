@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { createHelia } from 'helia'
+import config from '../../config/index.js'
 import { CID } from 'multiformats/cid'
 import all from 'it-all'
 import { unixfs } from '@helia/unixfs'
@@ -13,7 +14,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.resolve(path.dirname(__filename), '../../../')
 
-const blockstore = new FsBlockstore(path.resolve(__dirname, 'blocks'), { createIfMissing: true })
+const blockstore = new FsBlockstore(config.ipfs_path, { createIfMissing: true })
 const helia = await createHelia({ blockstore })
 
 const add_cid_to_queue = (cid: string) => {

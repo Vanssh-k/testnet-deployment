@@ -11,6 +11,7 @@ const config = {
   redis_url: process.env.REDIS_URL ?? '',
   lighthouse_api_key: process.env.LIGHTHOUSE_API_KEY,
   logger_loki_host: process.env.LOGGER_LOKI_HOST ?? '',
+  ipfs_path: process.env.IPFS_PATH ?? ''
 }
 
 export default config
