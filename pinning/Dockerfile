@@ -62,30 +62,9 @@ RUN ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"
 
 RUN echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > $IPFS_PATH/datastore_spec
 
-RUN apt update -y && \
-    apt install -y nodejs && \
-    echo "NODE VERSION $(node --version)"
-
-RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3/ipfs-node-auth.git proxy && \
-    cd proxy && \
-    apt install -y npm && \
-    npm install && \
-    npm install -g pm2
-
-RUN echo "PM2 VERSION -- $(pm2 --version)" && \
-    stat proxy/app.js
-
-RUN apt update && \
-    apt install nginx -y && \
-    apt install -y curl ufw && \
-    ufw allow ssh && \
-    ufw allow 'Nginx Full'
-
-COPY config /etc/nginx/sites-available/default
-
-# start nginx and verify config update
-RUN nginx -t && \
-    service nginx start
+RUN git clone git@github.com:lighthouse-web3/data-migration.git migration-service && \
+    cd migration-service && \
+    go build -o migrator main.go
 
 ENV API_PORT 5001
 ENV GATEWAY_PORT 8080
@@ -94,11 +73,9 @@ ENV PROXY_PORT 5050
 ENV NGINX_PORT 80
 
 EXPOSE ${SWARM_PORT}
-# This may introduce security risk to expose API_PORT public
-# EXPOSE ${API_PORT}
-#EXPOSE ${GATEWAY_PORT}
-#EXPOSE ${PROXY_PORT}
+EXPOSE ${API_PORT}
+EXPOSE ${GATEWAY_PORT}
+EXPOSE ${PROXY_PORT}
 EXPOSE ${NGINX_PORT}
 
-# by default, run `ipfs daemon` to start as a running node
-ENTRYPOINT service nginx restart && pm2 start proxy/app.js && ipfs daemon
+ENTRYPOINT service nginx restart && pm2 start migration-service/migrator && ipfs daemon
