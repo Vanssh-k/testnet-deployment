@@ -71,24 +71,26 @@ const remove_cid_from_queue = (cid: string) => {
 }
 
 export const startPinning = async (cid: string) => {
+  const controller = new AbortController()
   try {
     console.log('Pinning: ' + cid)
     console.log(CID.parse(cid))
     add_cid_to_queue(cid)
-    const controller = new AbortController()
+    
     let lastEvent = ''
     const handleProgress = (evt: any) => {
       if (lastEvent !== 'helia:pin:add') {
         lastEvent = evt.type
       }
     }
-    const pin = all(
+
+    const pinPromise = all(
       helia.pins.add(CID.parse(cid), {
         onProgress: handleProgress,
         signal: controller.signal,
       }),
     )
-    pin.catch((err: any) => {
+    pinPromise.catch((err: any) => {
       console.log('catch'+err)
     })
 
@@ -132,7 +134,10 @@ export const startPinning = async (cid: string) => {
       delayCount++
     }
   } catch (error) {
-    console.log(error)
+    console.log('Error during pinning:', error);
+    // remove_cid_from_queue(cid);
+    return 'err'
+  } finally {
     return 'err'
   }
 }

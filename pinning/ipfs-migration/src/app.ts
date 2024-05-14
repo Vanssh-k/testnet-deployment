@@ -39,18 +39,18 @@ app.use('/api/v1/pin', PinningRouter)
 app.use('/api/v1/download', DownloadRouter)
 app.use(errorHandler)
 
-const cidPinningCRON = cron.schedule('*/40 * * * *', async () => {
+// const cidPinningCRON = cron.schedule('*/40 * * * *', async () => {
   console.log('Running Queued CRON')
   const cooldown = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
   const cidList = await getCIDByStatus(CIDStatus.Queued)
-  console.log(cidList)
   for (let i = 0; i < cidList.length; i++) {
+    console.log(cidList[i].cid)
     add_cid_helia(cidList[i].cid)
     if (i % 20 === 0) {
       await cooldown(120000)
     }
   }
-})
+// })
 
 app.listen(config.port, () => {
   console.log(`Server is running on port ${config.port}.`)
