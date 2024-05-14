@@ -48,7 +48,9 @@ const add_cid_to_queue = (cid: string) => {
     console.error('Error reading cid_queue.json file:', error)
   }
   console.log('Queue Before: '+ cids)
-  cids.push(cid)
+  if(!cid.includes(cid)) {
+    cids.push(cid)
+  }
   console.log('Queue After: '+ cids)
   fs.writeFileSync(path.resolve(__dirname, 'cid_queue.json'), JSON.stringify(cids, null, 2))
 }
