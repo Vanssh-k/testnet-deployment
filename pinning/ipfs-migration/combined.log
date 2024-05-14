@@ -1,0 +1,115 @@
+{
+  level: 'info',
+  message: '/api/v1/pin/add_cid?cid=QmZkmDuFF25LHJksmkfxUav3d4KsGLWkg5Nr69jzB6YPh',
+  metadata: { service: 'pinning-service', timestamp: '2024-04-17T08:55:24.811Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/pin/add_cid?cid=QmZkmDuFF25LHJksmkfxUav3d4KsGLWkg5Nr69jzB6YPh',
+  metadata: { service: 'pinning-service', timestamp: '2024-04-17T08:55:30.391Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/download/car?cid=QmZkmDuFF25LHJksmkfxUav3d4KsGLWkg5Nr69jzB6YPhZ',
+  metadata: { service: 'pinning-service', timestamp: '2024-04-28T06:54:29.144Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/download/car?cid=QmZkmDuFF25LHJksmkfxUav3d4KsGLWkg5Nr69jzB6YPhZ',
+  metadata: { service: 'pinning-service', timestamp: '2024-04-28T07:03:44.559Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/download/car?cid=QmZkmDuFF25LHJksmkfxUav3d4KsGLWkg5Nr69jzB6YPhZ',
+  metadata: { service: 'pinning-service', timestamp: '2024-04-28T07:06:38.066Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/download/car?cid=QmZkmDuFF25LHJksmkfxUav3d4KsGLWkg5Nr69jzB6YPhZ',
+  metadata: { service: 'pinning-service', timestamp: '2024-04-28T07:19:18.678Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/download/car?cid=QmZkmDuFF25LHJksmkfxUav3d4KsGLWkg5Nr69jzB6YPhZ',
+  metadata: { service: 'pinning-service', timestamp: '2024-04-28T07:19:31.928Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/download/car?cid=QmZkmDuFF25LHJksmkfxUav3d4KsGLWkg5Nr69jzB6YPhZ',
+  metadata: { service: 'pinning-service', timestamp: '2024-04-28T07:20:30.404Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/download/car?cid=QmZkmDuFF25LHJksmkfxUav3d4KsGLWkg5Nr69jzB6YPhZ',
+  metadata: { service: 'pinning-service', timestamp: '2024-04-28T07:26:28.938Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/download/car?cid=QmZkmDuFF25LHJksmkfxUav3d4KsGLWkg5Nr69jzB6YPhZ',
+  metadata: { service: 'pinning-service', timestamp: '2024-04-28T07:26:43.415Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/download/car?cid=QmZkmDuFF25LHJksmkfxUav3d4KsGLWkg5Nr69jzB6YPhZ',
+  metadata: { service: 'pinning-service', timestamp: '2024-04-28T07:47:46.115Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/pin/get_multiaddress',
+  metadata: { service: 'pinning-service', timestamp: '2024-05-14T12:11:19.184Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/pin/get_multiaddress',
+  metadata: { service: 'pinning-service', timestamp: '2024-05-14T12:11:35.346Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/pin/get_multiaddress',
+  metadata: { service: 'pinning-service', timestamp: '2024-05-14T12:12:12.081Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/pin/get_multiaddress',
+  metadata: { service: 'pinning-service', timestamp: '2024-05-14T12:24:39.893Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/pin/get_multiaddress',
+  metadata: { service: 'pinning-service', timestamp: '2024-05-14T12:26:26.676Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/pin/get_multiaddress',
+  metadata: { service: 'pinning-service', timestamp: '2024-05-14T12:27:06.909Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/pin/get_multiaddress',
+  metadata: { service: 'pinning-service', timestamp: '2024-05-14T12:27:09.614Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/pin/get_multiaddress',
+  metadata: { service: 'pinning-service', timestamp: '2024-05-14T12:27:40.733Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/pin/get_multiaddress',
+  metadata: { service: 'pinning-service', timestamp: '2024-05-14T12:28:04.889Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/pin/get_multiaddress',
+  metadata: { service: 'pinning-service', timestamp: '2024-05-14T12:44:37.355Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/download/car?cid=QmZkmDuFF25LHJksmkfxUav3d4KsGLWkg5Nr69jzB6YPhZ',
+  metadata: { service: 'pinning-service', timestamp: '2024-05-14T16:56:52.838Z' }
+}
+{
+  level: 'info',
+  message: '/api/v1/download/car?cid=QmZkmDuFF25LHJksmkfxUav3d4KsGLWkg5Nr69jzB6YPhZ',
+  metadata: { service: 'pinning-service', timestamp: '2024-05-14T16:58:21.596Z' }
+}

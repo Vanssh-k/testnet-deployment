@@ -6,6 +6,7 @@ import bodyParser from 'body-parser'
 import expressWinston from 'express-winston'
 
 import PinningRouter from './routes/pinning.js'
+import DownloadRouter from './routes/download.js'
 import errorHandler from './middleware/error/index.js'
 import logger from './utils/logger.js'
 import config from './config/index.js'
@@ -35,12 +36,14 @@ app.get('/health', (req: Request, res: Response) => {
 })
 
 app.use('/api/v1/pin', PinningRouter)
+app.use('/api/v1/download', DownloadRouter)
 app.use(errorHandler)
 
-const cidPinningCRON = cron.schedule('*/20 * * * *', async () => {
+const cidPinningCRON = cron.schedule('*/40 * * * *', async () => {
   console.log('Running Queued CRON')
   const cooldown = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
   const cidList = await getCIDByStatus(CIDStatus.Queued)
+  console.log(cidList)
   for (let i = 0; i < cidList.length; i++) {
     add_cid_helia(cidList[i].cid)
     if (i % 20 === 0) {

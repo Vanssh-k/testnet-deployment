@@ -62,8 +62,7 @@ export const halt_deals = async (req: Request, res: Response, next: NextFunction
     const cidData = await getCIDDetails(req.query.cid as string)
     if(cidData && cidData.cidStatus!==CIDStatus.DealMakingStarted) {
       const data = await updateCidStatus(req.query.cid as string, CIDStatus.HaltDeals)
-      const response = responseParser(data)
-      res.status(200).json(response)
+      res.status(200).json('Halted')
     }
     res.status(400).json('Deal Initiated')
   } catch (error) {
@@ -76,8 +75,7 @@ export const resume_deals = async (req: Request, res: Response, next: NextFuncti
     const cidData = await getCIDDetails(req.query.cid as string)
     if(cidData && cidData.cidStatus!==CIDStatus.Deleted) {
       const data = await updateCidStatus(req.query.cid as string, CIDStatus.Pinned)
-      const response = responseParser(data)
-      res.status(200).json(response)
+      res.status(200).json('Resumed')
     }
     res.status(400).json('File deleted.')
   } catch (error) {
