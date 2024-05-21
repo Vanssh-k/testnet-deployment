@@ -10,7 +10,7 @@ import DownloadRouter from './routes/download.js'
 import errorHandler from './middleware/error/index.js'
 import logger from './utils/logger.js'
 import config from './config/index.js'
-import { add_cid_helia } from './controller/pinning/index.js'
+import { startPinning } from './controller/pinning/helia.js'
 import getCIDByStatus from './db/cid/getCIDByStatus.js'
 import { CIDStatus } from './types/cidRecord.js'
 
@@ -39,18 +39,22 @@ app.use('/api/v1/pin', PinningRouter)
 app.use('/api/v1/download', DownloadRouter)
 app.use(errorHandler)
 
-// const cidPinningCRON = cron.schedule('*/40 * * * *', async () => {
-  console.log('Running Queued CRON')
-  const cooldown = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-  const cidList = await getCIDByStatus(CIDStatus.Queued)
-  for (let i = 0; i < cidList.length; i++) {
-    console.log(cidList[i].cid)
-    add_cid_helia(cidList[i].cid)
-    if (i % 20 === 0) {
-      await cooldown(120000)
+const cidPinningCRON = cron.schedule('*/40 * * * *', async () => {
+  try{
+    console.log('Running Queued CRON')
+    const cooldown = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+    const cidList = await getCIDByStatus(CIDStatus.Queued)
+    for (let i = 0; i < cidList.length; i++) {
+      console.log('Adding '+cidList[i].cid)
+      startPinning(cidList[i].cid)
+      if (i % 20 === 0) {
+        await cooldown(120000)
+      }
     }
+  } catch(er){
+    console.log("here")
   }
-// })
+})
 
 app.listen(config.port, () => {
   console.log(`Server is running on port ${config.port}.`)
