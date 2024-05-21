@@ -45,10 +45,12 @@ const cidPinningCRON = cron.schedule('*/40 * * * *', async () => {
     const cooldown = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
     const cidList = await getCIDByStatus(CIDStatus.Queued)
     for (let i = 0; i < cidList.length; i++) {
-      console.log('Adding '+cidList[i].cid)
-      startPinning(cidList[i].cid)
-      if (i % 20 === 0) {
-        await cooldown(120000)
+      if(cidList[i].cid==="bafybeidv7l2r4rr6l4hlmb73i4sllbpu6luisn2f7q3lvvfjr423ajle6m") {
+        console.log('Adding '+cidList[i].cid)
+        startPinning(cidList[i].cid)
+        if (i % 20 === 0) {
+          await cooldown(120000)
+        }
       }
     }
   } catch(er){

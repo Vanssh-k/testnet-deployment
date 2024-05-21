@@ -1,6 +1,6 @@
 import cjs from 'crypto-js'
 import CustomError from './error/customError.js'
-import checkApiKey from '../db/user/checkApiKey.js'
+import checkApiKey from '../db/user/auth/checkApiKey.js'
 import { type NextFunction, type Request, type Response } from 'express'
 
 const verifyAccessToken = async (accessToken: string) => {
