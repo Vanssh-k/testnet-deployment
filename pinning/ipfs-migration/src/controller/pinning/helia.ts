@@ -42,6 +42,15 @@ const calculateDirSize = async(cid: string): Promise<number> => {
 
 export const startPinning = async (cid: string) => {
   if(await helia.pins.isPinned(CID.parse(cid))) {
+    const fs = unixfs(helia)
+    const stat = await fs.stat(CID.parse(cid))
+    let fileSize = 0
+    if(stat.type==='directory') {
+      fileSize = await calculateDirSize(cid)
+    } else {
+      fileSize = Number(stat.fileSize)
+    }
+    await updateCIDDetails(cid, CIDStatus.Pinned, fileSize)
     return
   }
   try {
