@@ -10,7 +10,6 @@ import updateCIDDetails from '../../db/cid/updateCIDDetails.js'
 import helia from './heliainit.js'
 
 import config from '../../config/index.js'
-import { createHelia } from 'helia'
 import { FsBlockstore } from 'blockstore-fs'
 import { FsDatastore } from 'datastore-fs'
 
@@ -43,8 +42,6 @@ const calculateDirSize = async(cid: string): Promise<number> => {
 
 export const startPinning = async (cid: string) => {
   if(await helia.pins.isPinned(CID.parse(cid))) {
-    console.log(await calculateDirSize(cid))
-    console.log("return")
     return
   }
   try {
@@ -59,7 +56,6 @@ export const startPinning = async (cid: string) => {
       }
     }
     const controller = new AbortController()
-    const { signal } = controller
 
     try{
       const pinPromise = all(helia.pins.add(CID.parse(cid), {
