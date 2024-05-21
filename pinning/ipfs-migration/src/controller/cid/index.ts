@@ -14,19 +14,19 @@ export const add_cid = async (req: Request, res: Response, next: NextFunction) =
         await updateCidStatus(req.query.cid as string, CIDStatus.Queued)
       }
       res.status(200).json('File queued')
+    } else{
+      const fileData = {
+        cid: req.query.cid,
+        fileSize: 0,
+        mtype: null,
+        cidStatus: CIDStatus.Queued,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }
+      const data = await addCid(fileData)
+      const response = responseParser(data)
+      res.status(200).json(response)
     }
-    
-    const fileData = {
-      cid: req.query.cid,
-      fileSize: 0,
-      mtype: null,
-      cidStatus: CIDStatus.Queued,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    }
-    const data = await addCid(fileData)
-    const response = responseParser(data)
-    res.status(200).json(response)
   } catch (error) {
     next(error)
   }
