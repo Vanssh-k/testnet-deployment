@@ -26,15 +26,14 @@ const calculateDirSize = async(cid: string): Promise<number> => {
   try{
     const fs = unixfs(helia)
     let totalSize = 0
-    for await (const entry of fs.ls(CID.parse(cid))) {
-      if(entry.type==='file') {
-        totalSize = totalSize + Number(entry.size)
-        console.log(totalSize)
-      }
+    for await (const entry of fs.ls(CID.parse(cid), {offline: true})) {
       if(entry.type==='directory') {
         totalSize = totalSize + await calculateDirSize(entry.cid.toString())
+      } else {
+        totalSize = totalSize + Number(entry.size)
       }
     }
+    console.log(totalSize)
     console.log('end')
     return totalSize
   } catch(error) {
@@ -44,6 +43,7 @@ const calculateDirSize = async(cid: string): Promise<number> => {
 
 export const startPinning = async (cid: string) => {
   if(await helia.pins.isPinned(CID.parse(cid))) {
+    console.log(await calculateDirSize(cid))
     console.log("return")
     return
   }
