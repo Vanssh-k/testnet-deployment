@@ -1,6 +1,6 @@
 const service = 'pinning-service'
 
-const cidTable = 'nft-storage-cid'
+const cidTable = 'ff-cids'
 const userTable = 'ff-user-record'
 const userAuthTable = 'ff-user-auth'
 

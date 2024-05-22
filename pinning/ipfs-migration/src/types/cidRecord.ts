@@ -1,7 +1,9 @@
 export type CIDRecord = {
+  id: string
+  publicKey: string
   cid: string
   fileSize: number
-  mtype: string
+  mtype: string|null
   cidStatus: string
   createdAt: number
   updatedAt: number

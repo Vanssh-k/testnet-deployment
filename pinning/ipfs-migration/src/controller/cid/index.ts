@@ -1,13 +1,20 @@
 import { type NextFunction, type Response, type Request } from 'express'
+import { v4 } from 'uuid'
+import * as isIPFS from 'is-ipfs'
+
 import addCid from '../../db/cid/addCid.js'
 import { CIDStatus } from '../../types/cidRecord.js'
 import responseParser from '../../utils/responseParser.js'
 import getCIDDetails from '../../db/cid/getCIDDetails.js'
 import updateCidStatus from '../../db/cid/updateCidStatus.js'
 import {delete_cid_helia} from '../pinning/index.js'
+import CustomError from '../../middleware/error/customError.js'
 
 export const add_cid = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    if(!isIPFS.cid(req.query.cid as string)) {
+      throw new CustomError(500, "Invalid CID")
+    }
     const cidData = await getCIDDetails(req.query.cid as string)
     if(cidData) {
       if(cidData.cidStatus===CIDStatus.PinningFailed || cidData.cidStatus===CIDStatus.Deleted){
@@ -16,7 +23,9 @@ export const add_cid = async (req: Request, res: Response, next: NextFunction) =
       res.status(200).json('File queued')
     } else{
       const fileData = {
-        cid: req.query.cid,
+        id: v4(),
+        publicKey: req.body.user.publicKey,
+        cid: req.query.cid as string,
         fileSize: 0,
         mtype: null,
         cidStatus: CIDStatus.Queued,

@@ -8,13 +8,16 @@ export default async (cid: string): Promise<CIDRecord> => {
   try {
     const params = {
       TableName: cidTable,
-      Key: {
-        cid: cid,
+      IndexName: 'cid-index',
+      KeyConditionExpression: 'cid = :c',
+      ExpressionAttributeValues: {
+        ':c': cid,
       },
     }
 
-    const record = await dbbClient.get(params)
-    return record.Item as CIDRecord
+    const record = await dbbClient.query(params)
+    const Items = record.Items ?? []
+    return Items[0] as CIDRecord
   } catch (error: any) {
     logger.error(`Error getting cid info: ${error}`)
     throw new CustomError(500, `Internal Server Error.`)
