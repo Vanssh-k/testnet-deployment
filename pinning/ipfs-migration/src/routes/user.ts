@@ -19,7 +19,7 @@ router.get('/get_profile', authenticator(), get_profile)
 
 router.get(
   '/create_api_key',
-  validate(validator.apiKeyName, { query: true }),
+  validate(validator.apiKey, { query: true }),
   create_api_key,
 )
 
