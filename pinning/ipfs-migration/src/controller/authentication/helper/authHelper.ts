@@ -12,7 +12,7 @@ import createNewUser from '../../../db/user/createNewUser.js'
 import userDetails from '../../../db/user/userDetails.js'
 import { UserDetails } from '../../../types/user.js'
 import CustomError from '../../../middleware/error/customError.js'
-import verifySignature from 'src/utils/verifySignature.js'
+import verifySignature from '../../../utils/verifySignature.js'
 
 export const getMessage = async (publicKey: string, encryption: string): Promise<string> => {
   const record = await userDetails(publicKey.trim().toLowerCase())

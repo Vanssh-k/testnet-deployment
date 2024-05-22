@@ -5,6 +5,7 @@ import morgan from 'morgan'
 import bodyParser from 'body-parser'
 import expressWinston from 'express-winston'
 
+import UserRouter from './routes/user.js'
 import PinningRouter from './routes/pinning.js'
 import DownloadRouter from './routes/download.js'
 import errorHandler from './middleware/error/index.js'
@@ -35,6 +36,7 @@ app.get('/health', (req: Request, res: Response) => {
   res.status(200).send('OK')
 })
 
+app.use('/api/v1/user', UserRouter)
 app.use('/api/v1/pin', PinningRouter)
 app.use('/api/v1/download', DownloadRouter)
 app.use(errorHandler)
