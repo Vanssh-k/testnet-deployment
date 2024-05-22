@@ -8,7 +8,7 @@ import {
   verificationTokenSchema,
   web3authEmailVerificationSchema,
 } from './user.js'
-import { apiKey, verifySignerSchema, tweetRechargeSchema, apiKeyIdSchema } from './auth.js'
+import { apiKey, verifySignerSchema, apiKeyIdSchema } from './auth.js'
 
 export default {
   apiKey,
@@ -16,7 +16,6 @@ export default {
   messageSchema,
   createTagSchema,
   verifySignerSchema,
-  tweetRechargeSchema,
   apiKeyIdSchema,
   publicKeySchema,
   getUploadsSchema,

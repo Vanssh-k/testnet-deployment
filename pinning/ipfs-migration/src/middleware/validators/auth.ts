@@ -2,7 +2,7 @@ import joi from 'joi'
 
 export const apiKey = joi.object({
   keyName: joi.string().min(1).max(100).default('key'),
-  signedMessage: joi.string().required().messages({
+  signature: joi.string().required().messages({
     'any.required': `signedMessage not found`,
   }),
   publicKey: joi.string().required().messages({
@@ -18,15 +18,6 @@ export const verifySignerSchema = joi.object({
     'any.required': `publicKey not found`,
   }),
   keyName: joi.string().min(1).max(100),
-})
-
-export const tweetRechargeSchema = joi.object({
-  twitterID: joi.string().required().messages({
-    'any.required': `twitterID not found`,
-  }),
-  publicKey: joi.string().required().messages({
-    'any.required': `publicKey not found`,
-  }),
 })
 
 export const apiKeyIdSchema = joi.object({

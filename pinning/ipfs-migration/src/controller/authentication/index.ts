@@ -38,7 +38,7 @@ export const create_api_key = async (req: Request, res: Response, next: NextFunc
 
 export const get_user_keys = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await getUserKeys(req.body.publicKey)
+    const data = await getUserKeys(req.body.user.publicKey)
     res.status(200).json(data)
   } catch (error) {
     next(error)
