@@ -3,12 +3,12 @@ import { cidTable } from '../../config/constants.js'
 import logger from '../../utils/logger.js'
 import CustomError from '../../middleware/error/customError.js'
 
-export default async (cid: string, cidStatus: string, fileSize: number): Promise<void> => {
+export default async (id: string, cidStatus: string, fileSize: number): Promise<void> => {
   try {
     const params = {
       TableName: cidTable,
       Key: {
-        cid: cid,
+        id: id,
       },
       UpdateExpression: 'set cidStatus = :c, updatedAt = :u, fileSize = :f',
       ExpressionAttributeValues: {

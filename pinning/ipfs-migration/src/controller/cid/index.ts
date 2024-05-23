@@ -18,7 +18,7 @@ export const add_cid = async (req: Request, res: Response, next: NextFunction) =
     const cidData = await getCIDDetails(req.query.cid as string)
     if(cidData) {
       if(cidData.cidStatus===CIDStatus.PinningFailed || cidData.cidStatus===CIDStatus.Deleted){
-        await updateCidStatus(req.query.cid as string, CIDStatus.Queued)
+        await updateCidStatus(cidData.id, CIDStatus.Queued)
       }
       res.status(200).json('File queued')
     } else{
@@ -55,7 +55,7 @@ export const delete_cid = async (req: Request, res: Response, next: NextFunction
   try {
     const cidData = await getCIDDetails(req.query.cid as string)
     if(cidData && cidData.cidStatus!==CIDStatus.DealMakingStarted) {
-      const data = await updateCidStatus(req.query.cid as string, CIDStatus.Deleted)
+      const data = await updateCidStatus(cidData.id, CIDStatus.Deleted)
       delete_cid_helia(req.query.cid as string)
       const response = responseParser(data)
       res.status(200).json(response)
@@ -70,7 +70,7 @@ export const halt_deals = async (req: Request, res: Response, next: NextFunction
   try {
     const cidData = await getCIDDetails(req.query.cid as string)
     if(cidData && cidData.cidStatus!==CIDStatus.DealMakingStarted) {
-      const data = await updateCidStatus(req.query.cid as string, CIDStatus.HaltDeals)
+      const data = await updateCidStatus(cidData.id, CIDStatus.HaltDeals)
       res.status(200).json('Halted')
     }
     res.status(400).json('Deal Initiated')
@@ -83,7 +83,7 @@ export const resume_deals = async (req: Request, res: Response, next: NextFuncti
   try {
     const cidData = await getCIDDetails(req.query.cid as string)
     if(cidData && cidData.cidStatus!==CIDStatus.Deleted) {
-      const data = await updateCidStatus(req.query.cid as string, CIDStatus.Pinned)
+      const data = await updateCidStatus(cidData.id, CIDStatus.Pinned)
       res.status(200).json('Resumed')
     }
     res.status(400).json('File deleted.')

@@ -40,7 +40,7 @@ const calculateDirSize = async(cid: string): Promise<number> => {
   }
 }
 
-export const startPinning = async (cid: string) => {
+export const startPinning = async (id: string, cid: string) => {
   if(await helia.pins.isPinned(CID.parse(cid))) {
     const fs = unixfs(helia)
     const stat = await fs.stat(CID.parse(cid))
@@ -91,7 +91,7 @@ export const startPinning = async (cid: string) => {
         }
         console.log(fileSize)
         console.log('aborting pinned')
-        await updateCIDDetails(cid, CIDStatus.Pinned, fileSize)
+        await updateCIDDetails(id, CIDStatus.Pinned, fileSize)
         // helia.stop()
         // controller.abort('Pinned!')
         kill = true

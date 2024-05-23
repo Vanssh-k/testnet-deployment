@@ -25,8 +25,8 @@ const libp2p = await createLibp2p({
   privateKey: await unmarshalPrivateKey(peerId.privateKey!),
   addresses: {
     listen: [
-      '/ip4/0.0.0.0/tcp/0',
-      '/ip6/::/tcp/0',
+      '/ip4/0.0.0.0/tcp/9000',
+      '/ip6/::/tcp/9001',
       '/webrtc'
     ]
   },
