@@ -50,7 +50,7 @@ export const startPinning = async (id: string, cid: string) => {
     } else {
       fileSize = Number(stat.fileSize)
     }
-    await updateCIDDetails(cid, CIDStatus.Pinned, fileSize)
+    await updateCIDDetails(id, CIDStatus.Pinned, fileSize)
     return
   }
   try {
@@ -98,14 +98,14 @@ export const startPinning = async (id: string, cid: string) => {
       }
       if (FileSearchEvent.includes(lastEvent)) {
         console.log('aborting peer not found')
-        await updateCIDDetails(cid, CIDStatus.PinningFailed, 0)
+        await updateCIDDetails(id, CIDStatus.PinningFailed, 0)
         // helia.stop()
         // controller.abort('Peer not found!')
         kill = true
       }
       if (delayCount >= 20) {
         console.log('aborting timeout')
-        await updateCIDDetails(cid, CIDStatus.PinningFailed, 0)
+        await updateCIDDetails(id, CIDStatus.PinningFailed, 0)
         // helia.stop()
         // controller.abort('Timeout!')
         kill = true
