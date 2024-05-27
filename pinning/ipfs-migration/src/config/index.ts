@@ -12,7 +12,7 @@ const config = {
   redis_url: process.env.REDIS_URL ?? '',
   lighthouse_api_key: process.env.LIGHTHOUSE_API_KEY,
   logger_loki_host: process.env.LOGGER_LOKI_HOST ?? '',
-  ipfs_path: path.resolve('~/', 'ipfs/'),
+  ipfs_path: process.env.IPFS_PATH ?? 'ipfs/',
   peerID: process.env.PEER_ID ?? '',
   privKey: process.env.PRIVATE_KEY ?? '',
   pubKey: process.env.PUBLIC_KEY ?? '',
