@@ -121,7 +121,9 @@ export const startPinning = async (id: string, cid: string) => {
 }
 
 export const deleteFile = async (cid: string) => {
-  helia.blockstore.delete(CID.parse(cid))
+  const unpinPromise = await all(helia.pins.rm(CID.parse(cid)))
+  await helia.blockstore.delete(CID.parse(cid))
+  return 1
 }
 
 export const getMultiaddress = async() => {

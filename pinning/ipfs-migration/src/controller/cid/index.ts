@@ -7,7 +7,7 @@ import { CIDStatus } from '../../types/cidRecord.js'
 import responseParser from '../../utils/responseParser.js'
 import getCIDDetails from '../../db/cid/getCIDDetails.js'
 import updateCidStatus from '../../db/cid/updateCidStatus.js'
-import {delete_cid_helia} from '../pinning/index.js'
+import { deleteFile } from '../pinning/helia.js'
 import CustomError from '../../middleware/error/customError.js'
 
 export const add_cid = async (req: Request, res: Response, next: NextFunction) => {
@@ -56,11 +56,12 @@ export const delete_cid = async (req: Request, res: Response, next: NextFunction
     const cidData = await getCIDDetails(req.query.cid as string)
     if(cidData && cidData.cidStatus!==CIDStatus.DealMakingStarted) {
       const data = await updateCidStatus(cidData.id, CIDStatus.Deleted)
-      delete_cid_helia(req.query.cid as string)
+      deleteFile(req.query.cid as string)
       const response = responseParser(data)
       res.status(200).json(response)
+    } else {
+      res.status(400).json('CID Not Found')
     }
-    res.status(400).json('CID Not Found')
   } catch (error) {
     next(error)
   }
