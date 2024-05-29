@@ -15,6 +15,6 @@ export enum CIDStatus {
   PinningFailed = 'pinning-failed',
   Pinned = 'pinned',
   Deleted = 'deleted',
-  HaltDeals = 'halt-deals',
   DealMakingStarted = 'deal-making-started',
+  DealCreated = 'deal-created',
 }

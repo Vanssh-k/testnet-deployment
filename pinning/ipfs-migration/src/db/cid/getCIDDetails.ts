@@ -4,7 +4,7 @@ import logger from '../../utils/logger.js'
 import { CIDRecord } from '../../types/cidRecord.js'
 import CustomError from '../../middleware/error/customError.js'
 
-export default async (cid: string): Promise<CIDRecord> => {
+export default async (cid: string): Promise<CIDRecord[]> => {
   try {
     const params = {
       TableName: cidTable,
@@ -17,7 +17,7 @@ export default async (cid: string): Promise<CIDRecord> => {
 
     const record = await dbbClient.query(params)
     const Items = record.Items ?? []
-    return Items[0] as CIDRecord
+    return Items as CIDRecord[]
   } catch (error: any) {
     logger.error(`Error getting cid info: ${error}`)
     throw new CustomError(500, `Internal Server Error.`)
