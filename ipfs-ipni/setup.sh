@@ -1,19 +1,11 @@
 #!/bin/bash
 
-# Initialize IPFS
-ipfs init
-
-# Configure IPFS with custom settings
+ipfs init -p server
 ipfs config Datastore.StorageMax 1EB && \
-  ipfs bootstrap add /dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt && \
-  ipfs bootstrap add /dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN && \
-  ipfs bootstrap add /dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa && \
-  ipfs bootstrap add /dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb
-
+  ipfs bootstrap rm all --all
 
 ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"${AWS_ACCESS_KEY}\",\"bucket\":\"${AWS_S3_BUCKET}\",\"region\":\"${AWS_REGION}\",\"secretKey\":\"${AWS_SECRET_KEY}\",\"type\":\"s3ds\"},\"mountpoint\":\"/blocks\",\"prefix\":\"s3.datastore\",\"type\":\"measure\"},{\"child\": {\"compression\":\"none\",\"path\":\"datastore\",\"type\":\"levelds\"},\"mountpoint\": \"/\",\"prefix\":\"leveldb.datastore\",\"type\":\"measure\"}],\"type\":\"mount\"}"
 echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > ${IPFS_PATH}/datastore_spec
-
 
 IPFS_CONFIG="$IPFS_PATH/config"
 jq '.Routing = {
@@ -35,9 +27,11 @@ jq '.Routing = {
         }
       },
       "Routers": {
-        "CidContact": {
+        "IndexProvider": {
           "Parameters": {
-            "Endpoint": "http://127.0.0.1:50617"
+            "Endpoint": "http://127.0.0.1:50617",
+            "MaxProvideBatchSize": 10000,
+            "MaxProvideConcurrency": 1
           },
           "Type": "http"
         },
@@ -46,11 +40,10 @@ jq '.Routing = {
             "Routers": [
               {
                 "IgnoreErrors": true,
-                "RouterName": "CidContact",
+                "RouterName": "IndexProvider",
                 "Timeout": "30m"
               },
               {
-                "ExecuteAfter": "2s",
                 "IgnoreErrors": true,
                 "RouterName": "WanDHT",
                 "Timeout": "30m"
@@ -92,9 +85,10 @@ provider init
 : "${DELEGATED_ROUTING_MULTIADDR:=/ip4/0.0.0.0/tcp/0}"
 : "${DELEGATED_ROUTING_CHUNK_SIZE:=1000}"
 : "${DELEGATED_ROUTING_SNAPSHOT_SIZE:=10000}"
-: "${DELEGATED_ROUTING_ADDRS:=/ip4/127.0.0.1/tcp/0}"
+: "${DELEGATED_ROUTING_ADDRS_TCP:=/ip4/127.0.0.1/tcp/0}"
+: "${DELEGATED_ROUTING_ADDRS_UDP:=/ip4/127.0.0.1/udp/0}"
 
-CONFIG_FILE="/root/.index-provider/config"
+CONFIG_FILE="${PROVIDER_PATH}/config"
 
 # Update IPNI config with the IPFS peer ID and environment variables
 jq ".DelegatedRouting.ProviderID = \"$PEER_ID\"" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
@@ -106,7 +100,7 @@ jq ".DirectAnnounce.URLs = [\"$DIRECT_ANNOUNCE_URL\"]" $CONFIG_FILE > tmp.json &
 jq ".DelegatedRouting.ListenMultiaddr = \"$DELEGATED_ROUTING_MULTIADDR\"" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 jq ".DelegatedRouting.ChunkSize = ($DELEGATED_ROUTING_CHUNK_SIZE | tonumber)" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 jq ".DelegatedRouting.SnapshotSize = ($DELEGATED_ROUTING_SNAPSHOT_SIZE | tonumber)" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
-jq ".DelegatedRouting.Addrs = [\"$DELEGATED_ROUTING_ADDRS\"]" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
+jq ".DelegatedRouting.Addrs = [\"$DELEGATED_ROUTING_ADDRS_TCP\", \"$DELEGATED_ROUTING_ADDRS_UDP\"]" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 
 # Start the IPNI service in the foreground
 provider daemon
