@@ -1,13 +1,17 @@
 const service = 'pinning-service'
 
-const cidTable = 'nft-storage-cid'
-const userAuthTable = 'user-auth'
+const cidTable = 'ff-cids'
+const userTable = 'ff-user-record'
+const userAuthTable = 'ff-user-auth'
 
 const cacheClearTime = {
   day: 86400,
   week: 604800,
   month: 2628000,
 }
+
+const freeDataLimitInBytes = 1073741824
+const messageString = 'Please prove you are the owner of this wallet by signing this message, nonce='
 
 const lighthouseAPIURL = 'https://api.lighthouse.storage'
 
@@ -33,7 +37,10 @@ const PinningDoneEvent = 'helia:pin:add'
 
 export {
   service,
+  freeDataLimitInBytes,
+  messageString,
   cidTable,
+  userTable,
   userAuthTable,
   cacheClearTime,
   lighthouseAPIURL,

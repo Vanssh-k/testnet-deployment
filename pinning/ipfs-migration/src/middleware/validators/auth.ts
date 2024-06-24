@@ -1,0 +1,27 @@
+import joi from 'joi'
+
+export const apiKey = joi.object({
+  keyName: joi.string().min(1).max(100).default('key'),
+  signature: joi.string().required().messages({
+    'any.required': `signedMessage not found`,
+  }),
+  publicKey: joi.string().required().messages({
+    'any.required': `publicKey not found`,
+  }),
+})
+
+export const verifySignerSchema = joi.object({
+  signedMessage: joi.string().required().messages({
+    'any.required': `signedMessage not found`,
+  }),
+  publicKey: joi.string().required().messages({
+    'any.required': `publicKey not found`,
+  }),
+  keyName: joi.string().min(1).max(100),
+})
+
+export const apiKeyIdSchema = joi.object({
+  keyId: joi.string().max(100).required().messages({
+    'any.required': `keyId not found`,
+  }),
+})

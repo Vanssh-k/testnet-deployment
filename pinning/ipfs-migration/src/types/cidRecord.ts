@@ -1,7 +1,9 @@
 export type CIDRecord = {
+  id: string
+  publicKey: string
   cid: string
   fileSize: number
-  mtype: string
+  mtype: string|null
   cidStatus: string
   createdAt: number
   updatedAt: number
@@ -13,6 +15,6 @@ export enum CIDStatus {
   PinningFailed = 'pinning-failed',
   Pinned = 'pinned',
   Deleted = 'deleted',
-  HaltDeals = 'halt-deals',
   DealMakingStarted = 'deal-making-started',
+  DealCreated = 'deal-created',
 }

@@ -1,26 +1,25 @@
 import dbbClient from '../db/ddbClient.js'
-import { cidTable } from '../../config/constants.js'
 import logger from '../../utils/logger.js'
+import { userTable } from '../../config/constants.js'
 import CustomError from '../../middleware/error/customError.js'
 
-export default async (id: string, cidStatus: string, fileSize: number): Promise<void> => {
+export default async (publicKey: string, dataToAdd: number): Promise<void> => {
   try {
     const params = {
-      TableName: cidTable,
+      TableName: userTable,
       Key: {
-        id: id,
+        publicKey,
       },
-      UpdateExpression: 'set cidStatus = :c, updatedAt = :u, fileSize = :f',
+      UpdateExpression: 'set dataLimit = dataLimit + :d, updatedAt = :u',
       ExpressionAttributeValues: {
-        ':c': cidStatus,
-        ':f': fileSize,
+        ':d': dataToAdd,
         ':u': Date.now(),
       },
     }
 
     await dbbClient.update(params)
   } catch (error: any) {
-    logger.error(`Error halt cid: ${error}`)
+    logger.error('Update user data limit Error: ' + error)
     throw new CustomError(500, `Internal Server Error.`)
   }
 }

@@ -1,22 +1,21 @@
 version: '3.8'
 services:
   ipfs-ipni-service:
+    container_name: ipfs-ipni-service
     build: .
     environment:
       - ANNOUNCE_MULTIADDR=/ip4/${IP_ADDRESS_SELF}/tcp/3105/http
       - LISTEN_MULTIADDR=/ip4/0.0.0.0/tcp/3105
       - PUBLISHER_KIND=libp2phttp
-      - RETRIEVAL_MULTIADDR=/ip4/${IP_ADDRESS_SELF}/tcp/3103
       - DIRECT_ANNOUNCE_URL=https://cid.contact/ingest/announce
       - DELEGATED_ROUTING_MULTIADDR=/ip4/0.0.0.0/tcp/50617
-      - DELEGATED_ROUTING_CHUNK_SIZE=10000
-      - DELEGATED_ROUTING_SNAPSHOT_SIZE=100000
-      - DELEGATED_ROUTING_ADDRS=/ip4/${IP_ADDRESS_SELF}/tcp/4001
-      # - ROUTE_ACCESS_TOKEN=${ROUTE_ACCESS_TOKEN}
-      # - AWS_SECRET_KEY=${AWS_SECRET_KEY}
-      # - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
-      # - AWS_REGION=${AWS_REGION}
-      # - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - DELEGATED_ROUTING_ADDRS_TCP=/ip4/${IP_ADDRESS_SELF}/tcp/4001
+      - DELEGATED_ROUTING_ADDRS_UDP=/ip4/${IP_ADDRESS_SELF}/udp/4001
+      - AWS_SECRET_KEY={{ AWS_SECRET_KEY }}
+      - AWS_ACCESS_KEY={{ AWS_ACCESS_KEY }}
+      - AWS_REGION={{ AWS_REGION }}
+      - AWS_S3_BUCKET={{ AWS_S3_BUCKET }}
+      - ROUTE_ACCESS_TOKEN={{ ROUTE_ACCESS_TOKEN }}
 
     ports:
       - "4001:4001"

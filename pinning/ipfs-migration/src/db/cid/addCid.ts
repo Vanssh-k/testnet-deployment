@@ -1,9 +1,10 @@
 import dbbClient from '../db/ddbClient.js'
 import { cidTable } from '../../config/constants.js'
+import {CIDRecord} from '../../types/cidRecord.js'
 import logger from '../../utils/logger.js'
 import CustomError from '../../middleware/error/customError.js'
 
-export default async (fileDetails: any): Promise<void> => {
+export default async (fileDetails: CIDRecord): Promise<void> => {
   try {
     const params = {
       TableName: cidTable,
