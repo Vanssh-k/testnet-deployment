@@ -100,7 +100,7 @@ jq ".DirectAnnounce.URLs = [\"$DIRECT_ANNOUNCE_URL\"]" $CONFIG_FILE > tmp.json &
 jq ".DelegatedRouting.ListenMultiaddr = \"$DELEGATED_ROUTING_MULTIADDR\"" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 jq ".DelegatedRouting.ChunkSize = ($DELEGATED_ROUTING_CHUNK_SIZE | tonumber)" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 jq ".DelegatedRouting.SnapshotSize = ($DELEGATED_ROUTING_SNAPSHOT_SIZE | tonumber)" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
-jq ".DelegatedRouting.Addrs = [\"$DELEGATED_ROUTING_ADDRS_TCP\", \"$DELEGATED_ROUTING_ADDRS_UDP\"]" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
+jq ".DelegatedRouting.Addrs = [\"$DELEGATED_ROUTING_ADDRS_TCP/p2p/$PEER_ID\", \"$DELEGATED_ROUTING_ADDRS_UDP/quic-v1/p2p/$PEER_ID\"]" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 
 # Start the IPNI service in the foreground
 provider daemon
