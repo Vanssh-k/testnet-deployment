@@ -1,47 +1,47 @@
-# Start from the official Go image
-FROM golang:1.22.0
+FROM golang:1.22
 
-LABEL maintainer="Ravish <ravish@lighthouse.storage>"
+LABEL maintainer "Ravish <ravish@lighthouse.storage>"
 
-RUN apt-get update && apt-get install -y git curl jq && \
-    # Clone IPFS and install the S3 plugin
-    git clone https://github.com/ipfs/kubo && \
-    cd kubo && \
-    go get github.com/lighthouse-web3/go-ds-s3/plugin@v0.14.0 && \
-    echo "\ns3ds github.com/lighthouse-web3/go-ds-s3/plugin 0" >> plugin/loader/preload_list && \
+RUN git clone https://github.com/ipfs/go-ipfs && \
+    cd go-ipfs && \
+    go get github.com/lighthouse-web3/go-ds-s3/plugin@v0.14.0
+
+# Add the plugin to the preload list.
+RUN cd go-ipfs && \
+    echo "\ns3ds github.com/lighthouse-web3/go-ds-s3/plugin 0" >> plugin/loader/preload_list &&\
+    cat plugin/loader/preload_list && \
+    cat plugin/loader/preload.go && \
     make build && \
     go mod tidy && \
     make build && \
     make install && \
     cp cmd/ipfs/ipfs /usr/local/bin/ipfs && \
-    # Install the IPNI service
-    go install github.com/ipni/index-provider/cmd/provider@v0.14.2
+    go install github.com/ipni/index-provider/cmd/provider@latest
+
+# checkpoint --- echo ipfs version
+RUN ipfs version
+RUN  echo "IPFS VERSION IS -- $(ipfs version)"
 
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs
+    apt-get install -y nodejs && \
+    apt-get install -y git curl jq
+
 RUN node -v && npm -v
 RUN npm i -g pm2
 
 COPY publisher/ /app/publisher/
 RUN cd /app/publisher && ls && npm install
 
-# Expose the port the Node.js app runs on
-# EXPOSE 8000
-
 CMD ["pm2", "start", "index.js"]
 
-RUN ps aux
-COPY entrypoint.sh /entrypoint.sh
-
-RUN chmod +x /entrypoint.sh
+COPY setup.sh /setup.sh
+RUN chmod +x /setup.sh
 
 ENV IPFS_PATH=/data/ipfs \
+    PROVIDER_PATH=/data/provider \
     API_PORT=5001 \
     GATEWAY_PORT=8080 \
     SWARM_PORT=4001
 
-# Expose necessary ports
-# EXPOSE 4001 5001 8080 3103 3105 3102 50617
-
 WORKDIR /data
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/setup.sh"]
