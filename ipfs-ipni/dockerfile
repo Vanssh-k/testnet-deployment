@@ -31,6 +31,7 @@ RUN npm i -g pm2 && pm2 install pm2-logrotate
 
 COPY publisher/ /app/publisher/
 RUN cd /app/publisher && ls && npm install
+CMD ["pm2", "start", "/app/publisher/index.js"]
 
 COPY setup.sh /setup.sh
 RUN chmod +x /setup.sh
@@ -43,3 +44,4 @@ ENV IPFS_PATH=/data/ipfs \
 
 WORKDIR /data
 ENTRYPOINT ["/setup.sh"]
+CMD ["ipfs", "daemon"]
