@@ -8,6 +8,15 @@ ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"${AW
 echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > ${IPFS_PATH}/datastore_spec
 
 IPFS_CONFIG="$IPFS_PATH/config"
+jq '.Addresses = {
+      "Swarm": [
+        "/ip4/0.0.0.0/tcp/4001",
+        "/ip4/0.0.0.0/tcp/4001/ws",
+        "/ip4/0.0.0.0/udp/4001/quic-v1",
+        "/ip4/0.0.0.0/udp/4001/quic-v1/webtransport"
+      ]
+    }' "$IPFS_CONFIG" > "$IPFS_CONFIG.tmp" && mv "$IPFS_CONFIG.tmp" "$IPFS_CONFIG"
+
 jq '.Routing = {
       "Methods": {
         "find-peers": {
@@ -55,7 +64,7 @@ jq '.Routing = {
         "WanDHT": {
           "Parameters": {
             "AcceleratedDHTClient": true,
-            "Mode": "dhtserver",
+            "Mode": "auto",
             "PublicIPNetwork": true
           },
           "Type": "dht"
@@ -65,7 +74,27 @@ jq '.Routing = {
     }' "$IPFS_CONFIG" > "$IPFS_CONFIG.tmp" && mv "$IPFS_CONFIG.tmp" "$IPFS_CONFIG"
 
 # Start IPFS daemon in the background
-ipfs daemon &
+USERNAME=$(whoami)
+sudo tee /etc/systemd/system/ipfs.service > /dev/null <<EOF
+[Unit]
+Description=IPFS Daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/ipfs daemon
+Restart=always
+User=$USERNAME
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Reload systemd to read the new unit file
+sudo systemctl daemon-reload
+
+# Start and enable the IPFS service
+sudo systemctl start ipfs
+sudo systemctl enable ipfs
 
 # Wait for IPFS to fully initialize
 sleep 10
@@ -102,5 +131,23 @@ jq ".DelegatedRouting.ChunkSize = ($DELEGATED_ROUTING_CHUNK_SIZE | tonumber)" $C
 jq ".DelegatedRouting.SnapshotSize = ($DELEGATED_ROUTING_SNAPSHOT_SIZE | tonumber)" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 jq ".DelegatedRouting.Addrs = [\"$DELEGATED_ROUTING_ADDRS_TCP/p2p/$PEER_ID\", \"$DELEGATED_ROUTING_ADDRS_UDP/quic-v1/p2p/$PEER_ID\"]" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 
-# Start the IPNI service in the foreground
-provider daemon
+sudo tee /etc/systemd/system/provider.service > /dev/null <<EOF
+[Unit]
+Description=IPFS Daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/provider daemon
+Restart=always
+User=$USERNAME
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+
+sudo systemctl start provider
+sudo systemctl enable provider
+
+pm2 start /app/publisher/index.js
