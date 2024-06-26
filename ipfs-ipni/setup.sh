@@ -73,32 +73,6 @@ jq '.Routing = {
       "Type": "custom"
     }' "$IPFS_CONFIG" > "$IPFS_CONFIG.tmp" && mv "$IPFS_CONFIG.tmp" "$IPFS_CONFIG"
 
-# Start IPFS daemon in the background
-USERNAME=$(whoami)
-sudo tee /etc/systemd/system/ipfs.service > /dev/null <<EOF
-[Unit]
-Description=IPFS Daemon
-After=network.target
-
-[Service]
-ExecStart=/usr/local/bin/ipfs daemon
-Restart=always
-User=$USERNAME
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Reload systemd to read the new unit file
-sudo systemctl daemon-reload
-
-# Start and enable the IPFS service
-sudo systemctl start ipfs
-sudo systemctl enable ipfs
-
-# Wait for IPFS to fully initialize
-sleep 10
-
 # Extract IPFS peer ID
 PEER_ID=$(ipfs config Identity.PeerID)
 
@@ -116,6 +90,7 @@ provider init
 : "${DELEGATED_ROUTING_SNAPSHOT_SIZE:=10000}"
 : "${DELEGATED_ROUTING_ADDRS_TCP:=/ip4/127.0.0.1/tcp/0}"
 : "${DELEGATED_ROUTING_ADDRS_UDP:=/ip4/127.0.0.1/udp/0}"
+: "${DELEGATED_ROUTING_ADDRS_WS:=/ip4/127.0.0.1/tcp/0/ws}"
 
 CONFIG_FILE="${PROVIDER_PATH}/config"
 
@@ -129,25 +104,6 @@ jq ".DirectAnnounce.URLs = [\"$DIRECT_ANNOUNCE_URL\"]" $CONFIG_FILE > tmp.json &
 jq ".DelegatedRouting.ListenMultiaddr = \"$DELEGATED_ROUTING_MULTIADDR\"" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 jq ".DelegatedRouting.ChunkSize = ($DELEGATED_ROUTING_CHUNK_SIZE | tonumber)" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 jq ".DelegatedRouting.SnapshotSize = ($DELEGATED_ROUTING_SNAPSHOT_SIZE | tonumber)" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
-jq ".DelegatedRouting.Addrs = [\"$DELEGATED_ROUTING_ADDRS_TCP/p2p/$PEER_ID\", \"$DELEGATED_ROUTING_ADDRS_UDP/quic-v1/p2p/$PEER_ID\"]" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
+jq ".DelegatedRouting.Addrs = [\"$DELEGATED_ROUTING_ADDRS_TCP\", \"$DELEGATED_ROUTING_ADDRS_UDP\", \"$DELEGATED_ROUTING_ADDRS_WS\"]" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 
-sudo tee /etc/systemd/system/provider.service > /dev/null <<EOF
-[Unit]
-Description=IPFS Daemon
-After=network.target
-
-[Service]
-ExecStart=/usr/local/bin/provider daemon
-Restart=always
-User=$USERNAME
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-
-sudo systemctl start provider
-sudo systemctl enable provider
-
-pm2 start /app/publisher/index.js
+provider daemon
