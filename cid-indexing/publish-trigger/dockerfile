@@ -1,0 +1,23 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget
+
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x -o nodesource_setup.sh && \
+    bash nodesource_setup.sh && \
+    apt-get install -y nodejs && \
+    echo "NODE VERSION $(node -v)" && \
+    npm i -g pm2 && \
+    pm2 install pm2-logrotate
+
+WORKDIR /app
+
+COPY package.json ./
+RUN npm install
+
+COPY ./ ./
+
+CMD ["pm2", "start", "/app/index.js"]

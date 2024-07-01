@@ -1,0 +1,13 @@
+FROM golang:1.22
+LABEL maintainer="Ravish <ravish@lighthouse.storage>"
+
+RUN go install github.com/ipni/index-provider/cmd/provider@latest
+
+COPY setup.sh /setup.sh
+RUN chmod +x /setup.sh
+
+ENV PROVIDER_PATH=/data/provider
+ENV PEER_ID=$PEER_ID
+
+WORKDIR /data
+ENTRYPOINT ["/setup.sh"]

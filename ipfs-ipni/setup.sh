@@ -8,6 +8,15 @@ ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"${AW
 echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > ${IPFS_PATH}/datastore_spec
 
 IPFS_CONFIG="$IPFS_PATH/config"
+jq '.Addresses = {
+      "Swarm": [
+        "/ip4/0.0.0.0/tcp/4001",
+        "/ip4/0.0.0.0/tcp/4001/ws",
+        "/ip4/0.0.0.0/udp/4001/quic-v1",
+        "/ip4/0.0.0.0/udp/4001/quic-v1/webtransport"
+      ]
+    }' "$IPFS_CONFIG" > "$IPFS_CONFIG.tmp" && mv "$IPFS_CONFIG.tmp" "$IPFS_CONFIG"
+
 jq '.Routing = {
       "Methods": {
         "find-peers": {
@@ -55,7 +64,7 @@ jq '.Routing = {
         "WanDHT": {
           "Parameters": {
             "AcceleratedDHTClient": true,
-            "Mode": "dhtserver",
+            "Mode": "auto",
             "PublicIPNetwork": true
           },
           "Type": "dht"
@@ -63,12 +72,6 @@ jq '.Routing = {
       },
       "Type": "custom"
     }' "$IPFS_CONFIG" > "$IPFS_CONFIG.tmp" && mv "$IPFS_CONFIG.tmp" "$IPFS_CONFIG"
-
-# Start IPFS daemon in the background
-ipfs daemon &
-
-# Wait for IPFS to fully initialize
-sleep 10
 
 # Extract IPFS peer ID
 PEER_ID=$(ipfs config Identity.PeerID)
@@ -87,6 +90,7 @@ provider init
 : "${DELEGATED_ROUTING_SNAPSHOT_SIZE:=10000}"
 : "${DELEGATED_ROUTING_ADDRS_TCP:=/ip4/127.0.0.1/tcp/0}"
 : "${DELEGATED_ROUTING_ADDRS_UDP:=/ip4/127.0.0.1/udp/0}"
+: "${DELEGATED_ROUTING_ADDRS_WS:=/ip4/127.0.0.1/tcp/0/ws}"
 
 CONFIG_FILE="${PROVIDER_PATH}/config"
 
@@ -100,7 +104,6 @@ jq ".DirectAnnounce.URLs = [\"$DIRECT_ANNOUNCE_URL\"]" $CONFIG_FILE > tmp.json &
 jq ".DelegatedRouting.ListenMultiaddr = \"$DELEGATED_ROUTING_MULTIADDR\"" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 jq ".DelegatedRouting.ChunkSize = ($DELEGATED_ROUTING_CHUNK_SIZE | tonumber)" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 jq ".DelegatedRouting.SnapshotSize = ($DELEGATED_ROUTING_SNAPSHOT_SIZE | tonumber)" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
-jq ".DelegatedRouting.Addrs = [\"$DELEGATED_ROUTING_ADDRS_TCP/p2p/$PEER_ID\", \"$DELEGATED_ROUTING_ADDRS_UDP/quic-v1/p2p/$PEER_ID\"]" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
+jq ".DelegatedRouting.Addrs = [\"$DELEGATED_ROUTING_ADDRS_TCP\", \"$DELEGATED_ROUTING_ADDRS_UDP\", \"$DELEGATED_ROUTING_ADDRS_WS\"]" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 
-# Start the IPNI service in the foreground
 provider daemon
