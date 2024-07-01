@@ -20,4 +20,4 @@ RUN npm install
 
 COPY ./ ./
 
-CMD ["pm2", "start", "/app/index.js"]
+ENTRYPOINT pm2-runtime start /app/index.js
