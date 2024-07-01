@@ -2,7 +2,7 @@ FROM golang:1.22
 LABEL maintainer="Ravish <ravish@lighthouse.storage>"
 
 RUN go install github.com/ipni/index-provider/cmd/provider@latest
-RUN apt-get install -y git curl jq
+RUN apt-get update && apt-get install -y git curl jq
 
 COPY setup.sh /setup.sh
 RUN chmod +x /setup.sh
