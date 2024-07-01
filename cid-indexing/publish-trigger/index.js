@@ -8,7 +8,7 @@ import cron from 'node-cron';
 const app = express();
 const PORT = 10001;
 const CID_FILE = './cid.txt';
-const DHT_ENDPOINT = 'http://localhost:5001/api/v0/routing/provide';
+const DHT_ENDPOINT = `http://${process.env.PUBLIC_NODE_HOSTNAME}/api/v0/routing/provide`;
 const BATCH_SIZE = 1000;
 const COOLDOWN_PERIOD = 5000; // 20 seconds
 const SKIP_FIRST_N = 1054803; // Set this to the number of CIDs you want to skip
