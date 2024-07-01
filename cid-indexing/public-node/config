@@ -1,0 +1,12 @@
+server {
+
+    listen 80;
+
+    server_name _;
+
+    location /api/v0/routing/provide {
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_pass http://localhost:5001;
+    }
+}
