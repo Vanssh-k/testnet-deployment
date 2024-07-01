@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  index-provider:
+    container_name: index-provider
+    build: 
+      context: .
+    environment:
+      - PEER_ID={{ PEER_ID }}
+      - ANNOUNCE_MULTIADDR=/ip4/{{IP_ADDRESS_SELF}}/tcp/3105/http
+      - LISTEN_MULTIADDR=/ip4/0.0.0.0/tcp/3105
+      - PUBLISHER_KIND=libp2phttp
+      - DIRECT_ANNOUNCE_URL=https://cid.contact/ingest/announce
+      - DELEGATED_ROUTING_MULTIADDR=/ip4/0.0.0.0/tcp/50617
+      - DELEGATED_ROUTING_ADDRS_TCP=/ip4/{{IP_ADDRESS_SELF}}/tcp/4001
+      - DELEGATED_ROUTING_ADDRS_UDP=/ip4/{{IP_ADDRESS_SELF}}/udp/4001
+    ports:
+      - "50617:50617"
+      - "3105:3105"
+    volumes:
+      - ipni_data:/root/.index-provider
+    networks:
+      - ipni_network
+
+volumes:
+  ipni_data:
+
+networks:
+  ipni_network:

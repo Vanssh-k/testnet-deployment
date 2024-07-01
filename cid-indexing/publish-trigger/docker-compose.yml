@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  publish-trigger:
+    container_name: publish-trigger
+    build: 
+      context: .
+    environment:
+      - ROUTE_ACCESS_TOKEN={{ ROUTE_ACCESS_TOKEN }}
+    ports:
+      - "10001:10001"
+    volumes:
+      - publisher:/app/publisher
+    networks:
+      - ipni_network
+
+volumes:
+  publisher:
+
+networks:
+  ipni_network:
