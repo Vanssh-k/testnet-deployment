@@ -94,6 +94,22 @@ app.get('/api/add_cid_record', async (req, res) => {
   }
 });
 
+app.get('/api/add_cid_record_without_publish', async (req, res) => {
+  const accessToken = req.headers['authorization']?.split(' ')[1]
+  if(accessToken===ACCESS_TOKEN) {
+    const cid = req.query.cid;
+    if (!cidListSet.has(cid)) {
+      cidListSet.add(cid);
+      await appendCIDToFile(cid);
+      res.status(200).send('CID added and published');
+    } else {
+      res.status(200).send('CID already exists');
+    }
+  } else{
+    res.status(403).send('Forbidden');
+  }
+});
+
 app.get('/api/manual_publish_all_cid', async (req, res) => {
   const accessToken = req.headers['authorization']?.split(' ')[1]
   if(accessToken===ACCESS_TOKEN) {
