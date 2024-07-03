@@ -1,54 +1,47 @@
-# Default server configuration
-
 server {
 
-        listen 80;
+    listen 80;
 
-        server_name _;
+    server_name _;
 
-        location /robots.txt {
-            alias /home/robots.txt;
-        }
+    location /robots.txt {
+        alias /home/robots.txt;
+    }
 
-        location ~/ipfs/QmTsNPHWbLUN5NnJPz2o2CvMc8BYicg9cenU8XHzKBwYrv {
-            deny all;
-        }
-        location ~/ipfs/QmaJdLzG6x16wWAsrB6brCzUxTkMmJ8HQYp6RABbY64Lx4 {
-            deny all;
-        }
-        location ~/ipfs/QmUd7a5Xtjjpu1go5wJ5Z2kBaFVavHYJNG1PQdLw65vaGX {
-            deny all;
-        }
+	location /ipns {
+        proxy_pass http://10.0.9.53;
+    }
 
-        location ~ "^/ipfs/(.+)$" {
-            proxy_set_header Host $host;
-            proxy_set_header X-Forwarded-For $remote_addr;
-            if ($arg_w ~ .){
-                proxy_pass http://localhost:8090;
-            }
-            proxy_pass http://localhost:8080;
-        }
+    location /api/v0/dag/stat {
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_pass http://localhost:5001;
+    }
 
-        location /ipns {
-            proxy_pass http://10.0.9.53;
-        }
-
-        location /api/v0/dag/stat {
-            proxy_set_header Host $host;
-            proxy_set_header X-Forwarded-For $remote_addr;
+    location /api/v0/cat {
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
             proxy_pass http://localhost:5001;
-        }
+    }
 
-        location /api/v0/cat {
-            proxy_set_header Host $host;
-            proxy_set_header X-Forwarded-For $remote_addr;
-                proxy_pass http://localhost:5001;
-        }
+    location /api/v0/get {
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_pass http://localhost:5001;
+    }
 
-        location /api/v0/get {
-            proxy_set_header Host $host;
-            proxy_set_header X-Forwarded-For $remote_addr;
-            proxy_pass http://localhost:5001;
-        }
+    location /api/v0/ls {
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_pass http://localhost:5001;
+    }
 
+    location / {
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        if ($arg_w ~ .){
+            proxy_pass http://localhost:8090;
+        }
+        proxy_pass http://localhost:8080;
+    }
 }

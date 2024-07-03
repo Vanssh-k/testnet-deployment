@@ -47,7 +47,6 @@ RUN ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"
 RUN echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > $IPFS_PATH/datastore_spec
 RUN ipfs config Routing.Methods --json "{\"find-peers\":{\"RouterName\":\"WanDHT\"},\"find-providers\": {\"RouterName\": \"ParallelHelper\"},\"get-ipns\": {\"RouterName\": \"WanDHT\"},\"provide\": {\"RouterName\": \"ParallelHelper\"},\"put-ipns\":{\"RouterName\": \"WanDHT\"}}"
 RUN ipfs config Routing.Routers --json "{\"IndexProvider\": {\"Parameters\": {\"Endpoint\": \"http://index-provider:50617\",\"MaxProvideBatchSize\": 10000,\"MaxProvideConcurrency\": 1},\"Type\": \"http\"},\"ParallelHelper\": {\"Parameters\": {\"Routers\": [{\"IgnoreErrors\": true,\"RouterName\": \"IndexProvider\",\"Timeout\": \"30m\"},{\"IgnoreErrors\": true,\"RouterName\": \"WanDHT\",\"Timeout\": \"30m\"}]},\"Type\": \"parallel\"},\"WanDHT\": {\"Parameters\": {\"AcceleratedDHTClient\": true,\"Mode\": \"dhtserver\",\"PublicIPNetwork\": true},\"Type\": \"dht\"}}"
-RUN ipfs config Addresses.Swarm --json "[\"/ip4/0.0.0.0/tcp/4001/ws\",\"/ip4/0.0.0.0/tcp/4001\",\"/ip4/0.0.0.0/udp/4001/quic-v1\",\"/ip4/0.0.0.0/udp/4001/quic-v1/webtransport\"]"
 
 RUN apt update && \
     apt install nginx -y && \
