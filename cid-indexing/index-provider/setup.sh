@@ -13,7 +13,6 @@ provider init
 : "${DELEGATED_ROUTING_SNAPSHOT_SIZE:=10000}"
 : "${DELEGATED_ROUTING_ADDRS_TCP:=/ip4/127.0.0.1/tcp/0}"
 : "${DELEGATED_ROUTING_ADDRS_UDP:=/ip4/127.0.0.1/udp/0}"
-: "${DELEGATED_ROUTING_ADDRS_WS:=/ip4/127.0.0.1/tcp/0/ws}"
 
 CONFIG_FILE="${PROVIDER_PATH}/config"
 
@@ -27,6 +26,6 @@ jq ".DirectAnnounce.URLs = [\"$DIRECT_ANNOUNCE_URL\"]" $CONFIG_FILE > tmp.json &
 jq ".DelegatedRouting.ListenMultiaddr = \"$DELEGATED_ROUTING_MULTIADDR\"" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 jq ".DelegatedRouting.ChunkSize = ($DELEGATED_ROUTING_CHUNK_SIZE | tonumber)" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 jq ".DelegatedRouting.SnapshotSize = ($DELEGATED_ROUTING_SNAPSHOT_SIZE | tonumber)" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
-jq ".DelegatedRouting.Addrs = [\"$DELEGATED_ROUTING_ADDRS_TCP\", \"$DELEGATED_ROUTING_ADDRS_UDP\", \"$DELEGATED_ROUTING_ADDRS_WS\"]" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
+jq ".DelegatedRouting.Addrs = [\"$DELEGATED_ROUTING_ADDRS_TCP\", \"$DELEGATED_ROUTING_ADDRS_UDP\"]" $CONFIG_FILE > tmp.json && mv tmp.json $CONFIG_FILE
 
 provider daemon
