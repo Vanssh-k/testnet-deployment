@@ -9,7 +9,7 @@ services:
       - AWS_ACCESS_KEY={{ AWS_ACCESS_KEY }}
       - AWS_REGION={{ AWS_REGION }}
       - AWS_S3_BUCKET={{ AWS_S3_BUCKET }}
-      - ANNOUNCE_IP={{ ANNOUNCE_IP }}
+      - ANNOUNCE_Address={{ ANNOUNCE_Address }}
     ports:
       - "14001:14001"
     volumes:

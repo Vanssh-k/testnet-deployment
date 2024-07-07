@@ -28,13 +28,13 @@ ARG AWS_SECRET_KEY
 ARG AWS_ACCESS_KEY
 ARG AWS_REGION
 ARG AWS_S3_BUCKET
-ARG ANNOUNCE_IP
+ARG ANNOUNCE_Address
 
 ENV AWS_SECRET_KEY=$AWS_SECRET_KEY
 ENV AWS_ACCESS_KEY=$AWS_ACCESS_KEY
 ENV AWS_REGION=$AWS_REGION
 ENV AWS_S3_BUCKET=$AWS_S3_BUCKET
-ENV ANNOUNCE_IP
+ENV ANNOUNCE_Address=$ANNOUNCE_Address
 
 RUN mkdir -p ${IPFS_PATH}
 
@@ -43,23 +43,23 @@ RUN ipfs init -p server
 RUN ipfs config Datastore.StorageMax 1EB && \
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]' && \
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST", "OPTIONS"]' && \
-    ipfs config Routing.Type custom
+    ipfs config Routing.Type custom && \
+    ipfs config --json Addresses.Announce ${ANNOUNCE_Address}
 
 RUN ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"${AWS_ACCESS_KEY}\",\"bucket\":\"${AWS_S3_BUCKET}\",\"region\":\"${AWS_REGION}\",\"secretKey\":\"${AWS_SECRET_KEY}\",\"type\":\"s3ds\"},\"mountpoint\":\"/blocks\",\"prefix\":\"s3.datastore\",\"type\":\"measure\"},{\"child\": {\"compression\":\"none\",\"path\":\"datastore\",\"type\":\"levelds\"},\"mountpoint\": \"/\",\"prefix\":\"leveldb.datastore\",\"type\":\"measure\"}],\"type\":\"mount\"}"
 RUN echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > $IPFS_PATH/datastore_spec
 RUN ipfs config Routing.Methods --json "{\"find-peers\":{\"RouterName\":\"WanDHT\"},\"find-providers\": {\"RouterName\": \"ParallelHelper\"},\"get-ipns\": {\"RouterName\": \"WanDHT\"},\"provide\": {\"RouterName\": \"ParallelHelper\"},\"put-ipns\":{\"RouterName\": \"WanDHT\"}}"
 RUN ipfs config Routing.Routers --json "{\"IndexProvider\": {\"Parameters\": {\"Endpoint\": \"http://index-provider:50617\",\"MaxProvideBatchSize\": 10000,\"MaxProvideConcurrency\": 1},\"Type\": \"http\"},\"ParallelHelper\": {\"Parameters\": {\"Routers\": [{\"IgnoreErrors\": true,\"RouterName\": \"IndexProvider\",\"Timeout\": \"30m\"},{\"IgnoreErrors\": true,\"RouterName\": \"WanDHT\",\"Timeout\": \"30m\"}]},\"Type\": \"parallel\"},\"WanDHT\": {\"Parameters\": {\"AcceleratedDHTClient\": true,\"Mode\": \"dhtserver\",\"PublicIPNetwork\": true},\"Type\": \"dht\"}}"
-RUN ipfs config --json Addresses.Announce '["/ip4/${ANNOUNCE_IP}/tcp/14001"]'
 
 RUN apt update && \
-    apt install nginx -y && \
+    apt install -y nginx-full && \
     apt install -y curl ufw && \
     ufw allow ssh && \
     ufw allow 'Nginx Full'
 
 COPY config /etc/nginx/sites-available/default
 RUN mkdir -p /etc/nginx/stream.d
-COPY ipfs-config.conf /etc/nginx/stream.d/
+COPY ipfs-config.conf /etc/nginx/stream.d/ipfs-config.conf
 RUN echo "include /etc/nginx/stream.d/*.conf;" >> /etc/nginx/nginx.conf
 
 ENV SWARM_PORT 14001
