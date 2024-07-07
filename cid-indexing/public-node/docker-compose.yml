@@ -9,8 +9,9 @@ services:
       - AWS_ACCESS_KEY={{ AWS_ACCESS_KEY }}
       - AWS_REGION={{ AWS_REGION }}
       - AWS_S3_BUCKET={{ AWS_S3_BUCKET }}
+      - ANNOUNCE_IP={{ ANNOUNCE_IP }}
     ports:
-      - "4001:4001"
+      - "14001:14001"
     volumes:
       - ipfs_data:/data/ipfs
     networks:
