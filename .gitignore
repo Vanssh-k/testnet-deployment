@@ -1,3 +1,4 @@
 keys*
 cron-jobs/.env
 cron-jobs/dist
+cron-jobs/node_modules
