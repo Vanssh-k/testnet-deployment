@@ -1,0 +1,26 @@
+{
+  "name": "cron-jobs",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --loader=ts-node/esm src/app.ts",
+    "build": "npx tsc",
+    "start": "node ./dist/src/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.609.0",
+    "@aws-sdk/lib-dynamodb": "^3.610.0",
+    "@types/node-cron": "^3.0.11",
+    "dotenv": "^16.4.5",
+    "node-cron": "^3.0.3"
+  }
+}
