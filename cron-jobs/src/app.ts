@@ -9,7 +9,7 @@ const sendForDealCRON = cron.schedule('0 */8 * * *', async() => {
   const cidList = await getPendingCIDList()
 
   for(let i=0; i<cidList.length; i++) {
-    console.log("Sending"+cidList[i])
+    console.log(cidList[i])
     const response = await fetch(`${filecoinFirstURL}/api/v1/pin/add_cid?cid=${cidList[i].cid}`, {
       method: 'GET',
         headers: {
@@ -21,5 +21,3 @@ const sendForDealCRON = cron.schedule('0 */8 * * *', async() => {
     }
   }
 })
-
-process.stdin.resume()
