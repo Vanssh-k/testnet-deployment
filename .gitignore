@@ -1,2 +1,3 @@
 keys*
 cron-jobs/.env
+cron-jobs/dist

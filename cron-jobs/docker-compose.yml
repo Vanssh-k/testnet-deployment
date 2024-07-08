@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  cron-jobs:
+    build: .
+    environment:
+      FILECOIN_FIRST_API_KEY=
+      AWS_ACCESS_KEY_ID=
+      AWS_SECRET_ACCESS_KEY=
+      AWS_REGION=

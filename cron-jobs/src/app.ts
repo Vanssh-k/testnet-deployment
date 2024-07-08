@@ -4,7 +4,7 @@ import { filecoinFirstURL } from './config/constants.js'
 import getPendingCIDList from './db/getPendingCIDList.js'
 import updateDealStatus from './db/updateDealStatus.js'
 
-const sendForDealCRON = cron.schedule('*/1 * * * *', async() => {
+const sendForDealCRON = cron.schedule('0 */8 * * *', async() => {
   console.log('Running send to deal making cron')
   const cidList = await getPendingCIDList()
 
