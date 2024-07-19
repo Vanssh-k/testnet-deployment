@@ -43,12 +43,13 @@ RUN ipfs init -p server
 RUN ipfs config Datastore.StorageMax 1EB && \
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]' && \
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST", "OPTIONS"]' && \
-    ipfs config Routing.Type custom
+    ipfs config Routing.Type custom && \
+    ipfs bootstrap rm --all
 
 RUN ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"${AWS_ACCESS_KEY}\",\"bucket\":\"${AWS_S3_BUCKET}\",\"region\":\"${AWS_REGION}\",\"secretKey\":\"${AWS_SECRET_KEY}\",\"type\":\"s3ds\"},\"mountpoint\":\"/blocks\",\"prefix\":\"s3.datastore\",\"type\":\"measure\"},{\"child\": {\"compression\":\"none\",\"path\":\"datastore\",\"type\":\"levelds\"},\"mountpoint\": \"/\",\"prefix\":\"leveldb.datastore\",\"type\":\"measure\"}],\"type\":\"mount\"}"
 RUN echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > $IPFS_PATH/datastore_spec
 RUN ipfs config Routing.Methods --json "{\"find-peers\":{\"RouterName\":\"WanDHT\"},\"find-providers\": {\"RouterName\": \"ParallelHelper\"},\"get-ipns\": {\"RouterName\": \"WanDHT\"},\"provide\": {\"RouterName\": \"ParallelHelper\"},\"put-ipns\":{\"RouterName\": \"WanDHT\"}}"
-RUN ipfs config Routing.Routers --json "{\"IndexProvider\": {\"Parameters\": {\"Endpoint\": \"http://index-provider:50617\",\"MaxProvideBatchSize\": 10000,\"MaxProvideConcurrency\": 1},\"Type\": \"http\"},\"ParallelHelper\": {\"Parameters\": {\"Routers\": [{\"IgnoreErrors\": true,\"RouterName\": \"IndexProvider\",\"Timeout\": \"30m\"},{\"IgnoreErrors\": true,\"RouterName\": \"WanDHT\",\"Timeout\": \"30m\"}]},\"Type\": \"parallel\"},\"WanDHT\": {\"Parameters\": {\"AcceleratedDHTClient\": true,\"Mode\": \"dhtserver\",\"PublicIPNetwork\": true},\"Type\": \"dht\"}}"
+RUN ipfs config Routing.Routers --json "{\"IndexProvider\": {\"Parameters\": {\"Endpoint\": \"http://index-provider:50617\",\"MaxProvideBatchSize\": 10000,\"MaxProvideConcurrency\": 1},\"Type\": \"http\"},\"ParallelHelper\": {\"Parameters\": {\"Routers\": [{\"IgnoreErrors\": true,\"RouterName\": \"IndexProvider\",\"Timeout\": \"30m\"}]},\"Type\": \"parallel\"}}"
 
 RUN apt update && \
     apt install -y nginx-full && \
