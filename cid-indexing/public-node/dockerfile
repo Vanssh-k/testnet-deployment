@@ -43,12 +43,14 @@ RUN ipfs init -p server
 RUN ipfs config Datastore.StorageMax 1EB && \
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]' && \
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST", "OPTIONS"]' && \
+    ipfs config --json Reprovider.Interval "0" && \
     ipfs config Routing.Type custom && \
-    ipfs bootstrap rm --all
+    ipfs config --json Addresses.AppendAnnounce ${ANNOUNCE_Address} && \
+    ipfs config --json Addresses.Swarm '["/ip4/127.0.0.1/tcp/14001", "/ip4/127.0.0.1/udp/14001/quic-v1"]'
 
 RUN ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"${AWS_ACCESS_KEY}\",\"bucket\":\"${AWS_S3_BUCKET}\",\"region\":\"${AWS_REGION}\",\"secretKey\":\"${AWS_SECRET_KEY}\",\"type\":\"s3ds\"},\"mountpoint\":\"/blocks\",\"prefix\":\"s3.datastore\",\"type\":\"measure\"},{\"child\": {\"compression\":\"none\",\"path\":\"datastore\",\"type\":\"levelds\"},\"mountpoint\": \"/\",\"prefix\":\"leveldb.datastore\",\"type\":\"measure\"}],\"type\":\"mount\"}"
 RUN echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > $IPFS_PATH/datastore_spec
-RUN ipfs config Routing.Methods --json "{\"find-peers\":{\"RouterName\":\"WanDHT\"},\"find-providers\": {\"RouterName\": \"ParallelHelper\"},\"get-ipns\": {\"RouterName\": \"WanDHT\"},\"provide\": {\"RouterName\": \"ParallelHelper\"},\"put-ipns\":{\"RouterName\": \"WanDHT\"}}"
+RUN ipfs config Routing.Methods --json "{\"find-peers\":{\"RouterName\":\"ParallelHelper\"},\"find-providers\": {\"RouterName\": \"ParallelHelper\"},\"get-ipns\": {\"RouterName\": \"ParallelHelper\"},\"provide\": {\"RouterName\": \"ParallelHelper\"},\"put-ipns\":{\"RouterName\": \"ParallelHelper\"}}"
 RUN ipfs config Routing.Routers --json "{\"IndexProvider\": {\"Parameters\": {\"Endpoint\": \"http://index-provider:50617\",\"MaxProvideBatchSize\": 10000,\"MaxProvideConcurrency\": 1},\"Type\": \"http\"},\"ParallelHelper\": {\"Parameters\": {\"Routers\": [{\"IgnoreErrors\": true,\"RouterName\": \"IndexProvider\",\"Timeout\": \"30m\"}]},\"Type\": \"parallel\"}}"
 
 RUN apt update && \
@@ -58,13 +60,11 @@ RUN apt update && \
     ufw allow 'Nginx Full'
 
 COPY config /etc/nginx/sites-available/default
+RUN mkdir -p /etc/nginx/stream.d
+COPY ipfs-config.conf /etc/nginx/stream.d/ipfs-config.conf
+RUN echo "include /etc/nginx/stream.d/*.conf;" >> /etc/nginx/nginx.conf
 
-RUN apt-get install -y iptables
-RUN apt-get install -y conntrack
-COPY setup_iptables.sh /setup_iptables.sh
-RUN chmod +x /setup_iptables.sh
-
-ENV SWARM_PORT 4001
+ENV SWARM_PORT 14001
 ENV API_PORT 5001
 ENV NGINX_PORT 80
 EXPOSE ${SWARM_PORT}
