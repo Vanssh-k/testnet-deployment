@@ -2,3 +2,6 @@ keys*
 cron-jobs/.env
 cron-jobs/dist
 cron-jobs/node_modules
+cid-indexing/publish-trigger/dist
+cid-indexing/publish-trigger/dist
+cid-indexing/publish-trigger/.env
