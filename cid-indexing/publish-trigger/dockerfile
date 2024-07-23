@@ -16,8 +16,9 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x -o nodesource_setup.sh && \
 WORKDIR /app
 
 COPY package.json ./
-RUN npm install
+RUN npm install && \
+    npm run build
 
 COPY ./ ./
 
-ENTRYPOINT pm2-runtime start /app/index.js
+ENTRYPOINT pm2-runtime start /app/dist/index.js
