@@ -52,16 +52,14 @@ RUN ipfs init
     
 RUN ipfs config Datastore.StorageMax 1EB && \
     ipfs config Routing.Type none && \
-    ipfs bootstrap rm --all && \
-    ipfs bootstrap add /ip4/65.0.133.240/tcp/4001/p2p/12D3KooWQGEFLVcVshXvxt5V7AGn9SNUKtwMTRtpFacfVUUxrrDu && \
-    ipfs bootstrap add /ip4/65.0.133.240/udp/4001/quic-v1/p2p/12D3KooWQGEFLVcVshXvxt5V7AGn9SNUKtwMTRtpFacfVUUxrrDu
+    ipfs bootstrap rm --all
 
 RUN ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"${AWS_ACCESS_KEY}\",\"bucket\":\"${AWS_S3_BUCKET}\",\"region\":\"${AWS_REGION}\",\"secretKey\":\"${AWS_SECRET_KEY}\",\"type\":\"s3ds\"},\"mountpoint\":\"/blocks\",\"prefix\":\"s3.datastore\",\"type\":\"measure\"},{\"child\": {\"compression\":\"none\",\"path\":\"datastore\",\"type\":\"levelds\"},\"mountpoint\": \"/\",\"prefix\":\"leveldb.datastore\",\"type\":\"measure\"}],\"type\":\"mount\"}"
 
 RUN echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > $IPFS_PATH/datastore_spec
 
 RUN apt update -y && \
-    curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh && \
+    curl -sL https://deb.nodesource.com/setup_18.x -o /tmp/nodesource_setup.sh && \
     bash /tmp/nodesource_setup.sh && \
     apt install nodejs && \
     echo "NODE VERSION $(node --version)"
@@ -70,10 +68,10 @@ RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3
     cd proxy && \
     npm install && \
     npm install -g pm2 && \
-    pm2 install pm2-logrotate
+    pm2 install pm2-logrotate && \
+    npm run build
 
-RUN echo "PM2 VERSION -- $(pm2 --version)" && \
-    stat proxy/app.js
+RUN echo "PM2 VERSION -- $(pm2 --version)"
 
 RUN apt update && \
     apt install nginx -y && \
@@ -91,4 +89,4 @@ ENV NGINX_PORT 80
 EXPOSE ${NGINX_PORT}
 
 # by default, run `ipfs daemon` to start as a running node
-ENTRYPOINT service nginx restart && pm2 start proxy/app.js && ipfs daemon
+ENTRYPOINT service nginx restart && pm2 start proxy/dist/src/index.js && ipfs daemon

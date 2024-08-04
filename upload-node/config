@@ -7,9 +7,10 @@ server {
     add_header 'Access-Control-Allow-Headers' 'Authorization,Accept,Origin,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';
     add_header 'Access-Control-Allow-Methods' 'GET,POST,OPTIONS,PUT,DELETE,PATCH';
 
-    client_header_buffer_size 1M;
+    client_body_timeout 36000s;
+    client_body_buffer_size 128M;
     location /api/v0/add {
-        proxy_request_buffering off;
+        proxy_request_buffering on;
         proxy_http_version 1.1;
         proxy_pass   http://localhost:5050/api/v0/add;
         proxy_set_header Host               $http_host;
@@ -17,6 +18,14 @@ server {
         proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
         add_header Cache-Control no-cache;
         client_max_body_size 16384M;
+        client_body_buffer_size 32K;
+        proxy_connect_timeout 19000s;
+        proxy_send_timeout 19000s;
+        proxy_read_timeout 19000s;
+        proxy_buffering on;
+        proxy_buffer_size 256k;
+        proxy_buffers 8 512k;
+        proxy_busy_buffers_size 512k;
     }
 
     location /api/v0/dag/stat {
