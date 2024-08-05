@@ -55,12 +55,12 @@ RUN ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"
 RUN echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > $IPFS_PATH/datastore_spec
 
 RUN apt update -y && \
-    curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh && \
+    curl -sL https://deb.nodesource.com/setup_20.x -o /tmp/nodesource_setup.sh && \
     bash /tmp/nodesource_setup.sh && \
     apt install nodejs && \
     echo "NODE VERSION $(node --version)"
 
-RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3/image-resize-microservice.git proxy && \
+RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3/gateway-middleware.git proxy && \
     cd proxy && \
     npm install && \
     npm run build && \
@@ -86,9 +86,6 @@ ENV GATEWAY_PORT 8080
 ENV SWARM_PORT 4001
 ENV NGINX_PORT 80
 
-# EXPOSE ${SWARM_PORT}
-# EXPOSE ${API_PORT}
-#EXPOSE ${GATEWAY_PORT}
 EXPOSE ${NGINX_PORT}
 
 ENTRYPOINT service nginx start && pm2 start proxy/dist/index.js && ipfs daemon
