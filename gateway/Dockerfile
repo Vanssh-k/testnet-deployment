@@ -40,16 +40,13 @@ RUN mkdir -p ${IPFS_PATH}
 
 RUN ipfs init -p server
 
-RUN ipfs config Datastore.StorageMax 1EB && \
-    ipfs config Routing.Type dht && \
+RUN ipfs config Routing.Type dht && \
     ipfs config Gateway.NoFetch --json true && \
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]' && \
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST", "OPTIONS"]' && \
     ipfs bootstrap rm --all && \
-    ipfs bootstrap add /ip4/10.0.9.53/tcp/4001/p2p/12D3KooWQXQxqpQMf9qkv8dDYkCRY1uUwMsMEAtq2XG7vY9YyNyo && \
-    ipfs config --json Gateway.NoDNSLink true && \
-    ipfs config --json Gateway.PublicGateways '{"*.mesh3.network":{"NoDNSLink": true,"Paths": ["/ipfs", "/ipns"],"UseSubdomains": true}}' && \
-    ipfs config --json Gateway.PublicGateways '{"*.lighthouse.storage":{"NoDNSLink": true,"Paths": ["/ipfs", "/ipns"],"UseSubdomains": true}}'
+    ipfs config --json Gateway.PublicGateways '{"localhost": null }' && \
+    ipfs bootstrap add /ip4/10.0.9.53/tcp/4001/p2p/12D3KooWQXQxqpQMf9qkv8dDYkCRY1uUwMsMEAtq2XG7vY9YyNyo
 
 RUN ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"${AWS_ACCESS_KEY}\",\"bucket\":\"${AWS_S3_BUCKET}\",\"region\":\"${AWS_REGION}\",\"secretKey\":\"${AWS_SECRET_KEY}\",\"type\":\"s3ds\"},\"mountpoint\":\"/blocks\",\"prefix\":\"s3.datastore\",\"type\":\"measure\"},{\"child\": {\"compression\":\"none\",\"path\":\"datastore\",\"type\":\"levelds\"},\"mountpoint\": \"/\",\"prefix\":\"leveldb.datastore\",\"type\":\"measure\"}],\"type\":\"mount\"}"
 RUN echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > $IPFS_PATH/datastore_spec
