@@ -5,3 +5,4 @@ cron-jobs/node_modules
 cid-indexing/publish-trigger/dist
 cid-indexing/publish-trigger/dist
 cid-indexing/publish-trigger/.env
+secret.yaml

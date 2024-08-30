@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-app
+  template:
+    metadata:
+      labels:
+        app: redis-app
+    spec:
+      nodeSelector:
+        eks.amazonaws.com/nodegroup: micro-node
+      containers:
+      - name: redis-container
+        image: redis:6.0.5
+        command:
+          - redis-server
+        ports:
+        - containerPort: 6379
+        resources:
+          limits:
+            cpu: "0.1"
+        env:
+        - name: MASTER
+          value: "true"
