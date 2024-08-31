@@ -7,4 +7,4 @@ data:
   DGN: "DEV"
   NODE_ENV: "development"
   AWS_REGION: "us-east-2"
-  REDIS_HOST: "redis-service.prod.svc:6379"
+  REDIS_URL: "redis://redis-service.prod.svc:6379"
