@@ -69,3 +69,14 @@ deploy-kubo-private: build-push-kubo-private
     kubectl apply -f ./upload-node
 
 
+# Manage Kong
+deploy-kong:
+     helm upgrade --install kong kong/ingress -n kong --values kong/core/values.yaml
+
+
+# Extra commands for building plugins as configmap in k8s for kong
+
+# Create configmap for kong plugins
+create-kong-plugins:
+    kubectl create configmap kong-kubo-response-plugin-cm --from-file ./kong/plugins/lighthouse-lambda-handler/src -n kong --dry-run=client --output=yaml > ./kong/plugins/k8s/kong-kubo-response-plugin-cm.yaml
+    kubectl create configmap kong-lighthouse-auth-plugin-cm --from-file ./kong/plugins/lighthouse-auth-plugin/src -n kong --dry-run=client --output=yaml > ./kong/plugins/k8s/kong-lighthouse-auth-plugin-cm.yaml

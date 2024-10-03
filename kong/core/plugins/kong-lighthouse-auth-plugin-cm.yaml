@@ -1,0 +1,38 @@
+apiVersion: v1
+data:
+  handler.lua: "local http = require \"resty.http\"\nlocal cjson = require \"cjson.safe\"\nlocal
+    kong = kong\n\nlocal GuardHandler = {\n    PRIORITY = 1000,\n    VERSION = \"0.0.2\",\n}\n\n--
+    Utility function to send error response\nlocal function send_error_response(message,
+    status)\n    local response_body = {\n        data = {},\n        error = {\n
+    \           code = tostring(status), \n            message = message\n        }\n
+    \   }\n\n    kong.response.set_header(\"Content-Type\", \"application/json\")\n
+    \   return kong.response.exit(status, cjson.encode(response_body))\nend\n\n--
+    Function to validate the token via an external authentication server\nlocal function
+    validate_token(token, conf)\n    local httpc = http.new()\n    local res, err
+    = httpc:request_uri(conf.validation_endpoint, {\n        method = \"POST\",\n
+    \       headers = {\n            [\"Content-Type\"] = \"application/json\",\n
+    \           [\"Authorization\"] = token\n        }\n    })\n\n    if not res then\n
+    \       return nil, err\n    end\n\n    return res.status, res.body\nend\n\nfunction
+    GuardHandler:access(conf)\n    local token = kong.request.get_header(conf.token_header)\n\n
+    \   if not token then\n        return send_error_response(\"Authentication token
+    missing or invalid. Access denied.\", 401)\n    end\n\n    local status, body
+    = validate_token(token, conf)\n\n    if status ~= 200 then\n        return send_error_response(\"Token
+    validation failed. Please verify your credentials.\", 401)\n    end\n\n    --
+    Parse the user data from the token validation response body\n    local user_data
+    = cjson.decode(body)\n\n    if not user_data or not user_data.publicKey then\n
+    \       return send_error_response(\"Failed to validate permissions for your credentials.\",
+    500)\n    end\n\n    kong.service.request.clear_header(conf.token_header)\n    kong.response.set_header(conf.user_header_value,
+    user_data.publicKey)\n\nend\n\n\nreturn GuardHandler\n\n"
+  schema.lua: "local typedefs = require \"kong.db.schema.typedefs\"\n\n\nlocal PLUGIN_NAME
+    = \"guard\"\n\n-- The schema for the plugin\nlocal schema = {\n  name = PLUGIN_NAME,\n
+    \ fields = {\n    { protocols = typedefs.protocols_http },\n    { consumer = typedefs.no_consumer
+    },\n    { config = {\n        type = \"record\",\n        fields = {\n            {
+    validation_endpoint = typedefs.url({ required = true }) },\n            { token_header\t=
+    typedefs.header_name{ default = \"Authorization\", required = true } },\n            {
+    user_header_value = typedefs.header_name{ default = \"X-User-Key\", required =
+    false } },\n        },\n        },\n    },\n}\n}\nreturn schema"
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: kong-lighthouse-auth-plugin-cm
+  namespace: kong

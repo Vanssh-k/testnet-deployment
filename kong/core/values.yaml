@@ -1,0 +1,7 @@
+gateway:
+  plugins:
+    configMaps:
+    - name: kong-kubo-response-plugin-cm
+      pluginName: kubo-response
+    - name: kong-lighthouse-auth-plugin-cm
+      pluginName: guard
