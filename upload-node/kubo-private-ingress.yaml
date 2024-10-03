@@ -6,17 +6,22 @@ metadata:
   labels:
     app: kubo-private
   annotations:
-    konghq.com/protocol: http
-    konghq.com/strip-path: "true"
-    konghq.com/plugins: "kubo-private-guard-plugin,"
+    # konghq.com/protocols : "https"
+    # konghq.com/https-redirect-status-code : "301"
+    konghq.com/strip-path: "false"
+    konghq.com/plugins: "kubo-private-guard-plugin"
 spec:
   ingressClassName: kong
+  # tls:
+  # - hosts:
+  #     - upload.lighthouse.storage
+  #   secretName: lighthouse-storage-tls
   rules:
     - host: upload.lighthouse.storage
       http:
         paths:
-          - path: /ipfs
-            pathType: ImplementationSpecific
+          - path: /api/v0/add
+            pathType: Exact
             backend:
               service:
                 name: kubo-private-service

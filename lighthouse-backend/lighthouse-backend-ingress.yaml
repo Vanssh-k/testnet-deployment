@@ -11,7 +11,7 @@ metadata:
 spec:
   ingressClassName: kong
   rules:
-    - host: backend.lighthouse.storage
+    - host: skynet.lighthouse.storage
       http:
         paths:
           - path: /api/v0/

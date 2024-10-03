@@ -32,11 +32,7 @@ gateway:
   deployment:
     kong:
       enabled: true
-  plugins:
-    configMaps:
-    - name: kong-plugin-myheader
-      pluginName: myheader
-
+      
   admin:
     enabled: true
     type: ClusterIP

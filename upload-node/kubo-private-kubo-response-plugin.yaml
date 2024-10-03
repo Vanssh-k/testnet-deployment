@@ -4,7 +4,7 @@ metadata:
   name: kubo-private-kubo-response-plugin
   namespace: prod
 config:
-  validation_endpoint: "http://13.233.238.248:3000/validate-jwt"
-  token_header : "Authorization"
-  user_header_value : "X-User-Key"
-plugin: guard
+  endpoint: "http://13.233.238.248:3000/validate-jwt"
+  user_identifier : "X-User-Key"
+  endpoint_validation_token : "Hello World"
+plugin: kubo-response

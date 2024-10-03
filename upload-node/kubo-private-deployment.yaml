@@ -31,15 +31,19 @@ spec:
         ports:
         - containerPort: 5001
           name: "http"
-        livenessProbe:
-          httpGet:
-            path: /api/v0/version
-            port: 5001
-          initialDelaySeconds: 30
-          periodSeconds: 20
-        readinessProbe:
-          httpGet:
-            path: /api/v0/version
-            port: 5001
-          initialDelaySeconds: 30
-          periodSeconds: 20
+        # livenessProbe:
+        #   exec:
+        #     command:
+        #     - curl
+        #     - -f
+        #     - http://localhost:5001/api/v0/version
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 20
+        # readinessProbe:
+        #   exec:
+        #     command:
+        #     - curl
+        #     - -f
+        #     - http://localhost:5001/api/v0/version
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 20
