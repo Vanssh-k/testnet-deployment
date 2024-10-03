@@ -28,25 +28,11 @@ ARG AWS_SECRET_KEY
 ARG AWS_ACCESS_KEY
 ARG AWS_REGION
 ARG AWS_S3_BUCKET
-ARG GITHUB_TOKEN
-ARG IPFS_ENDPOINT
-ARG ROUTE_ACCESS_TOKEN
-ARG PORT
-ARG LAMBDA_URL
-ARG ENVIRONMENT
-ARG API_ENDPOINT
 
 ENV AWS_SECRET_KEY     $AWS_SECRET_KEY
 ENV AWS_ACCESS_KEY     $AWS_ACCESS_KEY
 ENV AWS_REGION         $AWS_REGION
 ENV AWS_S3_BUCKET      $AWS_S3_BUCKET
-ENV GITHUB_TOKEN       $GITHUB_TOKEN
-ENV IPFS_ENDPOINT      $IPFS_ENDPOINT
-ENV ROUTE_ACCESS_TOKEN $ROUTE_ACCESS_TOKEN
-ENV PORT               $PORT
-ENV LAMBDA_URL         $LAMBDA_URL
-ENV ENVIRONMENT        $ENVIRONMENT
-ENV API_ENDPOINT       $API_ENDPOINT
 
 
 RUN mkdir -p ${IPFS_PATH} 
@@ -57,38 +43,9 @@ RUN ipfs config Datastore.StorageMax 1EB && \
     ipfs bootstrap rm --all
 
 RUN ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"${AWS_ACCESS_KEY}\",\"bucket\":\"${AWS_S3_BUCKET}\",\"region\":\"${AWS_REGION}\",\"secretKey\":\"${AWS_SECRET_KEY}\",\"type\":\"s3ds\"},\"mountpoint\":\"/blocks\",\"prefix\":\"s3.datastore\",\"type\":\"measure\"},{\"child\": {\"compression\":\"none\",\"path\":\"datastore\",\"type\":\"levelds\"},\"mountpoint\": \"/\",\"prefix\":\"leveldb.datastore\",\"type\":\"measure\"}],\"type\":\"mount\"}"
-
 RUN echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > $IPFS_PATH/datastore_spec
+RUN ipfs config Addresses.API "/ip4/0.0.0.0/tcp/5001"
 
-RUN apt update -y && \
-    curl -sL https://deb.nodesource.com/setup_18.x -o /tmp/nodesource_setup.sh && \
-    bash /tmp/nodesource_setup.sh && \
-    apt install nodejs && \
-    echo "NODE VERSION $(node --version)"
+EXPOSE 5001
 
-RUN git clone https://lighthouse-web3:${GITHUB_TOKEN}@github.com/lighthouse-web3/ipfs-node-auth.git proxy && \
-    cd proxy && \
-    npm install && \
-    npm install -g pm2 && \
-    pm2 install pm2-logrotate && \
-    npm run build
-
-RUN echo "PM2 VERSION -- $(pm2 --version)"
-
-RUN apt update && \
-    apt install nginx -y && \
-    apt install -y curl ufw && \
-    ufw allow ssh && \
-    ufw allow 'Nginx Full'
-
-COPY config /etc/nginx/sites-available/default
-
-# start nginx and verify config update
-RUN nginx -t && \
-    service nginx start
-
-ENV NGINX_PORT 80
-EXPOSE ${NGINX_PORT}
-
-# by default, run `ipfs daemon` to start as a running node
-ENTRYPOINT service nginx restart && pm2 start proxy/dist/src/index.js && ipfs daemon
+ENTRYPOINT ipfs daemon
