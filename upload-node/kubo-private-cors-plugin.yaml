@@ -1,0 +1,29 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: kubo-private-cors-plugin
+  namespace: prod
+plugin: cors
+config:
+  credentials: true  # Allow credentials if needed (cookies, auth headers)
+  methods:
+    - GET
+    - HEAD
+    - PUT
+    - PATCH
+    - POST
+    - DELETE
+    - OPTIONS
+  headers: 
+    - Accept
+    - Authorization
+    - Content-Type
+    - X-Requested-With
+    - Origin
+    - X-Deal-Parameter
+  private_network: false
+  origins:
+    - '*'
+  max_age: null
+  preflight_continue: false
+  exposed_headers: null

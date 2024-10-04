@@ -5,3 +5,6 @@ gateway:
       pluginName: kubo-response
     - name: kong-lighthouse-auth-plugin-cm
       pluginName: guard
+
+env: 
+  log_level : debug 

@@ -1,6 +1,6 @@
 apiVersion: v1
 data:
-  handler.lua: |
+  handler.lua: |-
     local http = require "resty.http"
     local cjson = require "cjson.safe"
     local ngx = ngx
@@ -50,10 +50,16 @@ data:
     end
 
     local function get_last_response_body(full_response_body)
-      kong.log.info("Processing full response body")
+      kong.log.info("Processing full response body: ", full_response_body)  -- Log the entire body
+
       local responses = {}
       for line in full_response_body:gmatch("[^\r\n]+") do
         table.insert(responses, line)
+      end
+
+      if kong.request.get_method() ~= "POST" then
+        kong.log.warn("Request method is not POST, skipping response processing")  -- Log non-POST methods
+        return
       end
 
       if #responses == 0 then
@@ -62,11 +68,11 @@ data:
       end
 
       local last_response = responses[#responses]
-      kong.log.info("Last response extracted: ", last_response)
+      kong.log.info("Last response extracted: ", last_response)  -- Log the last response
 
       local last_body, err = cjson.decode(last_response)
       if not last_body then
-        kong.log.err("Failed to decode the last response: ", err)
+        kong.log.err("Failed to decode the last response: ", err, " - Last response body: ", last_response)
         return nil, err
       end
 
@@ -76,8 +82,8 @@ data:
     function KuboResponseHandler:body_filter(conf)
       local ctx = kong.ctx.plugin
 
-      local chunk = ngx.arg[1]
-      local eof = ngx.arg[2]
+      local chunk = kong.response.get_raw_body()
+      local eof = ngx.arg[2]  -- Use ngx for eof as kong.response does not provide this
 
       if not ctx.buffer then
         kong.log.info("Initializing response buffer")
@@ -96,35 +102,51 @@ data:
       end
 
       if eof then
+        -- Complete response received, process it
         local full_response_body = table.concat(ctx.buffer)
         kong.log.info("Full response body received: ", full_response_body)
 
+        -- Attempt to get the last response body
         local last_body, err = get_last_response_body(full_response_body)
         if not last_body then
-          kong.log.err("Failed to extract the last response body")
-          ngx.arg[1] = full_response_body  -- return the original body if error
+          -- Error handling: return the original body if we fail to extract the last response
+          kong.log.err("Failed to extract the last response body, returning original response")
+          kong.response.set_raw_body(full_response_body)
           return
         end
 
+        -- Extract relevant fields from the last response
         local name = last_body.Name
         local hash = last_body.Hash
         local size = tonumber(last_body.Size)
 
         if not name or not hash or not size then
-          kong.log.err("Missing or invalid values: name=", name, " hash=", hash, " size=", last_body.Size)
-          ngx.arg[1] = full_response_body  -- return the original body if any value is nil
+          -- Error handling: log and return original body if any value is nil
+          kong.log.err("Missing or invalid values in the last response: name=", name, " hash=", hash, " size=", last_body.Size)
+          kong.response.set_raw_body(full_response_body)
           return
         end
 
+        -- Extract public key from headers
         local public_key = kong.response.get_header(conf.user_identifier)
         if not public_key then
+          -- Error handling: send error response if public_key is missing
           kong.log.err("Missing ", conf.user_identifier, " header in the response")
-          ngx.arg[1] = full_response_body  -- return the original body if public_key is missing
+
+          -- Set an error response to prompt the user to reupload the file
+          kong.response.set_status(400)  -- HTTP 400 Bad Request
+          kong.response.set_header("Content-Type", "application/json")
+          kong.response.exit(400, cjson.encode({
+            message = "Public key not found in the response. Please reupload the file."
+          }))
+
+          -- Stop further processing
           return
         else
           kong.log.info("Extracted public key: ", public_key)
         end
 
+        -- Schedule an asynchronous API call
         local ok, err = ngx.timer.at(0, async_api_call, conf, name, size, hash, public_key)
         if not ok then
           kong.log.err("Failed to create timer for async API call: ", err)
@@ -132,7 +154,8 @@ data:
           kong.log.info("Successfully scheduled async API call")
         end
 
-        ngx.arg[1] = full_response_body  -- always return the original body
+        -- Send the last response body back to the client
+        kong.response.set_raw_body(cjson.encode(last_body))  -- Return last response body
       end
     end
 

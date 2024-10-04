@@ -10,7 +10,9 @@ metadata:
     konghq.com/protocols: "https"
     konghq.com/https-redirect-status-code: "301"
     konghq.com/strip-path: "false"
-    konghq.com/plugins: "kubo-private-guard-plugin,kubo-private-kubo-response-plugin"
+    konghq.com/request-buffering: "false"
+    konghq.com/response-buffering: "false"
+    konghq.com/plugins: "kubo-private-guard-plugin,kubo-private-kubo-response-plugin,kubo-private-cors-plugin"
 spec:
   ingressClassName: kong
   tls:
