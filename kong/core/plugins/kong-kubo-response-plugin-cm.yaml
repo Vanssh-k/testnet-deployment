@@ -1,48 +1,142 @@
 apiVersion: v1
 data:
-  handler.lua: "local http = require \"resty.http\"\nlocal cjson = require \"cjson.safe\"\nlocal
-    ngx = ngx\n\nlocal KuboResponseHandler = {\n  VERSION = \"1.0.0\",\n  PRIORITY
-    = 1000\n}\n\nlocal function async_api_call(premature, conf, name, size, hash,
-    public_key)\n  if premature then\n    kong.log.debug(\"Timer prematurely terminated\")\n
-    \   return\n  end\n\n  kong.log.debug(\"Starting async API call\")\n  local httpc
-    = http.new()\n  \n  local payload = {\n    name = name,\n    size = size,\n    cid
-    = hash,\n    publicKey = public_key,\n    mimeType = \"unknown\",\n    encryption
-    = false,\n  }\n\n  local payload_json = cjson.encode(payload)\n  kong.log.debug(\"Payload
-    for async API call: \", payload_json)\n\n  local res, err = httpc:request_uri(conf.endpoint,
-    {\n    method = \"POST\",\n    body = payload_json,\n    headers = {\n      [\"Content-Type\"]
-    = \"application/json\",\n      [\"Authorization\"] = \"Bearer \" .. conf.endpoint_validation_token,\n
-    \   },\n    keepalive_timeout = conf.timeout,\n    keepalive_pool = 10,\n  })\n\n
-    \ if not res then\n    kong.log.err(\"Failed to make request to constant API:
-    \", err)\n  else\n    kong.log.debug(\"API call to constant API returned status:
-    \", res.status)\n  end\nend\n\nlocal function get_last_response_body(full_response_body)\n
-    \ kong.log.debug(\"Processing full response body\")\n  local responses = {}\n
-    \ for line in full_response_body:gmatch(\"[^\\r\\n]+\") do\n    table.insert(responses,
-    line)\n  end\n\n  if #responses == 0 then\n    kong.log.err(\"No responses found
-    in the full response body\")\n    return nil, \"Empty response body\"\n  end\n\n
-    \ local last_response = responses[#responses]\n  kong.log.debug(\"Last response
-    extracted: \", last_response)\n\n  local last_body, err = cjson.decode(last_response)\n
-    \ if not last_body then\n    kong.log.err(\"Failed to decode the last response:
-    \", err)\n    return nil, err\n  end\n\n  return last_body\nend\n\nfunction KuboResponseHandler:body_filter(conf)\n
-    \ local ctx = kong.ctx.plugin\n\n  local chunk = ngx.arg[1]\n  local eof = ngx.arg[2]\n\n
-    \ if not ctx.buffer then\n    kong.log.debug(\"Initializing response buffer\")\n
-    \   ctx.buffer = {}\n  end\n\n  if chunk then\n    kong.log.debug(\"Received response
-    chunk: \", chunk)\n    table.insert(ctx.buffer, chunk)\n  end\n\n  if not eof
-    then\n    kong.log.debug(\"Response not complete yet\")\n    ngx.arg[1] = nil\n
-    \   return\n  end\n\n  if eof then\n    local full_response_body = table.concat(ctx.buffer)\n
-    \   kong.log.debug(\"Full response body received: \", full_response_body)\n\n
-    \   local last_body, err = get_last_response_body(full_response_body)\n    if
-    not last_body then\n      kong.log.err(\"Failed to extract the last response body\")\n
-    \     return\n    end\n\n    local name = last_body.Name\n    local hash = last_body.Hash\n
-    \   local size = tonumber(last_body.Size)\n\n    if not size then\n      kong.log.err(\"Invalid
-    size value: \", last_body.Size)\n      return\n    end\n\n    local public_key
-    = kong.response.get_header(conf.user_identifier)\n    if not public_key then\n
-    \     kong.log.err(\"Missing \", conf.user_identifier, \" header in the response\")\n
-    \     return\n    else\n      kong.log.debug(\"Extracted public key: \", public_key)\n
-    \   end\n\n    local ok, err = ngx.timer.at(0, async_api_call, conf, name, size,
-    hash, public_key)\n    if not ok then\n      kong.log.err(\"Failed to create timer
-    for async API call: \", err)\n    else\n      kong.log.debug(\"Successfully scheduled
-    async API call\")\n    end\n\n    ngx.arg[1] = full_response_body\n  end\nend\n\nreturn
-    KuboResponseHandler\n"
+  handler.lua: |
+    local http = require "resty.http"
+    local cjson = require "cjson.safe"
+    local ngx = ngx
+
+    local KuboResponseHandler = {
+      VERSION = "1.0.0",
+      PRIORITY = 1000
+    }
+
+    local function async_api_call(premature, conf, name, size, hash, public_key)
+      if premature then
+        kong.log.info("Timer prematurely terminated")
+        return
+      end
+
+      kong.log.info("Starting async API call")
+      local httpc = http.new()
+
+      local payload = {
+        name = name,
+        size = size,
+        cid = hash,
+        publicKey = public_key,
+        mimeType = "unknown",
+        encryption = false,
+      }
+
+      local payload_json = cjson.encode(payload)
+      kong.log.info("Payload for async API call: ", payload_json)
+
+      local res, err = httpc:request_uri(conf.endpoint, {
+        method = "POST",
+        body = payload_json,
+        headers = {
+          ["Content-Type"] = "application/json",
+          ["Authorization"] = "Bearer " .. conf.endpoint_validation_token,
+        },
+        keepalive_timeout = conf.timeout,
+        keepalive_pool = 10,
+      })
+
+      if not res then
+        kong.log.err("Failed to make request to constant API: ", err)
+      else
+        kong.log.info("API call to constant API returned status: ", res.status)
+      end
+    end
+
+    local function get_last_response_body(full_response_body)
+      kong.log.info("Processing full response body")
+      local responses = {}
+      for line in full_response_body:gmatch("[^\r\n]+") do
+        table.insert(responses, line)
+      end
+
+      if #responses == 0 then
+        kong.log.err("No responses found in the full response body")
+        return nil, "Empty response body"
+      end
+
+      local last_response = responses[#responses]
+      kong.log.info("Last response extracted: ", last_response)
+
+      local last_body, err = cjson.decode(last_response)
+      if not last_body then
+        kong.log.err("Failed to decode the last response: ", err)
+        return nil, err
+      end
+
+      return last_body
+    end
+
+    function KuboResponseHandler:body_filter(conf)
+      local ctx = kong.ctx.plugin
+
+      local chunk = ngx.arg[1]
+      local eof = ngx.arg[2]
+
+      if not ctx.buffer then
+        kong.log.info("Initializing response buffer")
+        ctx.buffer = {}
+      end
+
+      if chunk then
+        kong.log.info("Received response chunk: ", chunk)
+        table.insert(ctx.buffer, chunk)
+      end
+
+      if not eof then
+        kong.log.info("Response not complete yet")
+        ngx.arg[1] = nil
+        return
+      end
+
+      if eof then
+        local full_response_body = table.concat(ctx.buffer)
+        kong.log.info("Full response body received: ", full_response_body)
+
+        local last_body, err = get_last_response_body(full_response_body)
+        if not last_body then
+          kong.log.err("Failed to extract the last response body")
+          ngx.arg[1] = full_response_body  -- return the original body if error
+          return
+        end
+
+        local name = last_body.Name
+        local hash = last_body.Hash
+        local size = tonumber(last_body.Size)
+
+        if not name or not hash or not size then
+          kong.log.err("Missing or invalid values: name=", name, " hash=", hash, " size=", last_body.Size)
+          ngx.arg[1] = full_response_body  -- return the original body if any value is nil
+          return
+        end
+
+        local public_key = kong.response.get_header(conf.user_identifier)
+        if not public_key then
+          kong.log.err("Missing ", conf.user_identifier, " header in the response")
+          ngx.arg[1] = full_response_body  -- return the original body if public_key is missing
+          return
+        else
+          kong.log.info("Extracted public key: ", public_key)
+        end
+
+        local ok, err = ngx.timer.at(0, async_api_call, conf, name, size, hash, public_key)
+        if not ok then
+          kong.log.err("Failed to create timer for async API call: ", err)
+        else
+          kong.log.info("Successfully scheduled async API call")
+        end
+
+        ngx.arg[1] = full_response_body  -- always return the original body
+      end
+    end
+
+    return KuboResponseHandler
   schema.lua: |-
     local typedefs = require "kong.db.schema.typedefs"
 

@@ -11,7 +11,8 @@ data:
     validate_token(token, conf)\n    local httpc = http.new()\n    local res, err
     = httpc:request_uri(conf.validation_endpoint, {\n        method = \"POST\",\n
     \       headers = {\n            [\"Content-Type\"] = \"application/json\",\n
-    \           [\"Authorization\"] = token\n        }\n    })\n\n    if not res then\n
+    \           [\"Authorization\"] = token\n        },\n        keepalive_timeout
+    = conf.timeout,\n        keepalive_pool = 10,\n    })\n\n    if not res then\n
     \       return nil, err\n    end\n\n    return res.status, res.body\nend\n\nfunction
     GuardHandler:access(conf)\n    local token = kong.request.get_header(conf.token_header)\n\n
     \   if not token then\n        return send_error_response(\"Authentication token
@@ -30,7 +31,8 @@ data:
     validation_endpoint = typedefs.url({ required = true }) },\n            { token_header\t=
     typedefs.header_name{ default = \"Authorization\", required = true } },\n            {
     user_header_value = typedefs.header_name{ default = \"X-User-Key\", required =
-    false } },\n        },\n        },\n    },\n}\n}\nreturn schema"
+    false } },\n            { timeout = { type = \"number\", default = 10000 }, },\n
+    \       },\n        },\n    },\n}\n}\nreturn schema"
 kind: ConfigMap
 metadata:
   creationTimestamp: null

@@ -15,6 +15,7 @@ local schema = {
             { validation_endpoint = typedefs.url({ required = true }) },
             { token_header	= typedefs.header_name{ default = "Authorization", required = true } },
             { user_header_value = typedefs.header_name{ default = "X-User-Key", required = false } },
+            { timeout = { type = "number", default = 10000 }, },
         },
         },
     },

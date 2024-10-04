@@ -76,7 +76,17 @@ deploy-kong:
 
 # Extra commands for building plugins as configmap in k8s for kong
 
+update-kong-plugins:
+    kubectl delete configmap kong-kubo-response-plugin-cm -n kong
+    kubectl create configmap kong-kubo-response-plugin-cm --from-file ./kong/plugins/kubo-response-plugin/src -n kong --dry-run=client --output=yaml > ./kong/core/plugins/kong-kubo-response-plugin-cm.yaml
+    kubectl apply -f ./kong/core/plugins/kong-kubo-response-plugin-cm.yaml
+
+    kubectl delete configmap kong-lighthouse-auth-plugin-cm -n kong
+    kubectl create configmap kong-lighthouse-auth-plugin-cm --from-file ./kong/plugins/lighthouse-auth-plugin/src -n kong --dry-run=client --output=yaml > ./kong/core/plugins/kong-lighthouse-auth-plugin-cm.yaml
+    kubectl apply -f ./kong/core/plugins/kong-lighthouse-auth-plugin-cm.yaml
+    # have to restart kong-manager pod
+
 # Create configmap for kong plugins
 create-kong-plugins:
-    kubectl create configmap kong-kubo-response-plugin-cm --from-file ./kong/plugins/lighthouse-lambda-handler/src -n kong --dry-run=client --output=yaml > ./kong/plugins/k8s/kong-kubo-response-plugin-cm.yaml
-    kubectl create configmap kong-lighthouse-auth-plugin-cm --from-file ./kong/plugins/lighthouse-auth-plugin/src -n kong --dry-run=client --output=yaml > ./kong/plugins/k8s/kong-lighthouse-auth-plugin-cm.yaml
+    kubectl create configmap kong-kubo-response-plugin-cm --from-file ./kong/plugins/kubo-response-plugin/src -n kong --dry-run=client --output=yaml > ./kong/core/plugins/kong-kubo-response-plugin-cm.yaml
+    kubectl create configmap kong-lighthouse-auth-plugin-cm --from-file ./kong/plugins/lighthouse-auth-plugin/src -n kong --dry-run=client --output=yaml > ./kong/core/plugins/kong-lighthouse-auth-plugin-cm.yaml

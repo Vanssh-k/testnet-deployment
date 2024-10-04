@@ -29,7 +29,9 @@ local function validate_token(token, conf)
         headers = {
             ["Content-Type"] = "application/json",
             ["Authorization"] = token
-        }
+        },
+        keepalive_timeout = conf.timeout,
+        keepalive_pool = 10,
     })
 
     if not res then

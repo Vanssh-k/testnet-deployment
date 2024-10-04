@@ -6,10 +6,8 @@ metadata:
   labels:
     app: kubo-private
   annotations:
-    # konghq.com/protocols : "https"
-    # konghq.com/https-redirect-status-code : "301"
     konghq.com/strip-path: "false"
-    konghq.com/plugins: "kubo-private-guard-plugin"
+    konghq.com/plugins: "kubo-private-guard-plugin,kubo-private-kubo-response-plugin"
 spec:
   ingressClassName: kong
   # tls:
