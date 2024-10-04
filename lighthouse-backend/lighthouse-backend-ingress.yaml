@@ -6,10 +6,16 @@ metadata:
   labels:
     app: lighthouse-backend
   annotations:
-    konghq.com/protocol: http
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    konghq.com/protocols: "https"
+    konghq.com/https-redirect-status-code: "301"
     konghq.com/strip-path: "true"
 spec:
   ingressClassName: kong
+  tls:
+  - secretName: lighthouse-backend-tls
+    hosts:
+    - skynet.lighthouse.storage
   rules:
     - host: skynet.lighthouse.storage
       http:
