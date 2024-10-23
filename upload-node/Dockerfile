@@ -1,4 +1,4 @@
-FROM golang:1.22
+FROM golang:1.23
 
 LABEL maintainer "Ravish <ravish@lighthouse.storage>"
 
@@ -48,6 +48,7 @@ RUN ipfs config Datastore.StorageMax 1EB && \
 RUN ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"${AWS_ACCESS_KEY}\",\"bucket\":\"${AWS_S3_BUCKET}\",\"region\":\"${AWS_REGION}\",\"secretKey\":\"${AWS_SECRET_KEY}\",\"type\":\"s3ds\"},\"mountpoint\":\"/blocks\",\"prefix\":\"s3.datastore\",\"type\":\"measure\"},{\"child\": {\"compression\":\"none\",\"path\":\"datastore\",\"type\":\"levelds\"},\"mountpoint\": \"/\",\"prefix\":\"leveldb.datastore\",\"type\":\"measure\"}],\"type\":\"mount\"}"
 RUN echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks\",\"region\":\"${AWS_REGION}\",\"rootDirectory\":\"\"},{\"mountpoint\":\"/\",\"path\":\"datastore\",\"type\":\"levelds\"}],\"type\":\"mount\"}" > $IPFS_PATH/datastore_spec
 RUN ipfs config Addresses.API "/ip4/0.0.0.0/tcp/5001"
+RUN ipfs config Addresses.Gateway "/ip4/0.0.0.0/tcp/8080"
 
 EXPOSE 5001
 

@@ -7,8 +7,8 @@ metadata:
     app: kubo-private
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    konghq.com/protocols: "https"
-    konghq.com/https-redirect-status-code: "301"
+    # konghq.com/protocols: "https"
+    # # konghq.com/https-redirect-status-code: "301"
     konghq.com/strip-path: "false"
     konghq.com/request-buffering: "false"
     konghq.com/response-buffering: "false"
@@ -16,7 +16,7 @@ metadata:
 spec:
   ingressClassName: kong
   tls:
-  - secretName: kubo-private-tls
+  - secretName: upload.lighthouse.storage
     hosts:
     - upload.lighthouse.storage
   rules:
