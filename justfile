@@ -13,6 +13,8 @@ GOBUILD_COMMAND := GO + " build"  # Command for building Go binaries
 
 
 DOCKER_PRIVATE_NODE_IMAGE := "prod/kubo-private"
+DOCKER_GATEWAY_NODE_IMAGE := "prod/kubo-gateway"
+
 
 # ECR repository details
 ECR_REPO := '050633092828.dkr.ecr.us-east-2.amazonaws.com'  # Define ECR (Elastic Container Registry) repository
@@ -86,7 +88,40 @@ update-kong-plugins:
     kubectl apply -f ./kong/core/plugins/kong-lighthouse-auth-plugin-cm.yaml
     # have to restart kong-manager pod
 
+
+# Build kubo-gateway
+build-kubo-gateway:
+    {{load_env}}
+    @echo "Building kubo-gateway Docker image with AWS credentials..."
+    {{DOCKER_BUILD_COMMAND}} \
+      --platform=linux/amd64 \
+      --build-arg AWS_SECRET_KEY=$AWS_SECRET_KEY \
+      --build-arg AWS_ACCESS_KEY=$AWS_ACCESS_KEY \
+      --build-arg AWS_REGION=$AWS_REGION \
+      --build-arg AWS_S3_BUCKET=$AWS_S3_BUCKET \
+      -t {{DOCKER_GATEWAY_NODE_IMAGE}} \
+      -f ./gateway-node/Dockerfile .
+
+# Tag the kubo-gateway Docker image
+tag-kubo-gateway:
+    @echo "Tagging the kubo-gateway Docker image..."
+    {{DOCKER_TAG_COMMAND}} {{DOCKER_GATEWAY_NODE_IMAGE}} {{ECR_REPO_NAME}}{{DOCKER_GATEWAY_NODE_IMAGE}}
+
+# Push the kubo-gateway Docker image to ECR
+push-kubo-gateway:
+    @echo "Pushing the kubo-gateway Docker image to ECR..."
+    {{DOCKER_PUSH_COMMAND}} {{ECR_REPO_NAME}}{{DOCKER_GATEWAY_NODE_IMAGE}}
+
+# Build, tag, and push the kubo-gateway to Docker image
+build-push-kubo-gateway: build-kubo-gateway tag-kubo-gateway push-kubo-gateway
+
+# Deploy the kubo-gateway to Kubernetes
+deploy-kubo-gateway: build-push-kubo-gateway
+    @echo "Deploying the kubo-gateway to Kubernates.."
+    kubectl delete pods -l app=kubo-gateway -n prod 
+    kubectl apply -f ./gateway-node
+
 # Create configmap for kong plugins
 create-kong-plugins:
-    kubectl create configmap kong-kubo-response-plugin-cm --from-file ./kong/plugins/kubo-response-plugin/src -n kong --dry-run=client --output=yaml > ./kong/core/plugins/kong-kubo-response-plugin-cm.yaml
+    kubectl create configmap kong-kubo-response-plugin-cm --from-file ./kong/plugins/kubo-response-plugin/src -n kong --dry-run=client --output=yaml > ./kong/setup/plugins/kong-kubo-response-plugin-cm.yaml
     kubectl create configmap kong-lighthouse-auth-plugin-cm --from-file ./kong/plugins/lighthouse-auth-plugin/src -n kong --dry-run=client --output=yaml > ./kong/core/plugins/kong-lighthouse-auth-plugin-cm.yaml

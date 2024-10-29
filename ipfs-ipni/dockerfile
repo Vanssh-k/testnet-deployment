@@ -22,17 +22,6 @@ RUN cd go-ipfs && \
 RUN ipfs version
 RUN  echo "IPFS VERSION IS -- $(ipfs version)"
 
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    apt-get install -y git curl jq
-
-RUN node -v && npm -v
-RUN npm i -g pm2 && pm2 install pm2-logrotate
-
-COPY publisher/ /app/publisher/
-RUN cd /app/publisher && ls && npm install
-CMD ["pm2", "start", "/app/publisher/index.js"]
-
 COPY setup.sh /setup.sh
 RUN chmod +x /setup.sh
 

@@ -81,9 +81,8 @@ data:
 
     function KuboResponseHandler:body_filter(conf)
       local ctx = kong.ctx.plugin
-
       local chunk = kong.response.get_raw_body()
-      local eof = ngx.arg[2]  -- Use ngx for eof as kong.response does not provide this
+      local eof = ngx.arg[2]
 
       if not ctx.buffer then
         kong.log.info("Initializing response buffer")
@@ -91,12 +90,12 @@ data:
       end
 
       if chunk then
-        kong.log.info("Received response chunk: ", chunk)
         table.insert(ctx.buffer, chunk)
+        kong.log.info("Response Buffer: ", ctx.buffer)
       end
 
       if not eof then
-        kong.log.info("Response not complete yet")
+        kong.log.info("Response not complete yet", ngx.arg[1])
         ngx.arg[1] = nil
         return
       end
@@ -154,8 +153,14 @@ data:
           kong.log.info("Successfully scheduled async API call")
         end
 
-        -- Send the last response body back to the client
-        kong.response.set_raw_body(cjson.encode(last_body))  -- Return last response body
+        local encryption_header = kong.request.get_header("Encryption")
+        if not encryption_header then
+          kong.log.info("Encryption header found; returning last response")
+          kong.response.set_raw_body(cjson.encode(last_body))  -- Return only the last response body
+        else
+          kong.log.info("Encryption header not found; returning full response")
+          kong.response.set_raw_body(full_response_body)  -- Return original full response body
+        end
       end
     end
 

@@ -3,6 +3,10 @@ kind: Service
 metadata:
   name: kubo-private-service
   namespace: prod
+  annotations:
+    konghq.com/read-timeout: "1000000"
+    konghq.com/connect-timeout: "1000000"
+    konghq.com/write-timeout: "1000000"
 spec:
   selector:
     app: kubo-private
@@ -12,7 +16,3 @@ spec:
     protocol: TCP
     port: 5001
     targetPort: 5001
-  - name : swarm
-    protocol: TCP
-    port: 4001
-    targetPort: 4001

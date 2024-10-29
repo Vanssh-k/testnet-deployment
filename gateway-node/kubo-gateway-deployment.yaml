@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubo-gateway-deployment
+  namespace: prod
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubo-gateway
+  template:
+    metadata:
+      labels:
+        app: kubo-gateway
+    spec:
+      nodeSelector:
+        eks.amazonaws.com/nodegroup: lighthouse-prod-medium-node-group
+      containers:
+      - name: kubo-gateway-container
+        image: 050633092828.dkr.ecr.us-east-2.amazonaws.com/prod/kubo-gateway
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2048Mi"
+            cpu: "1000m"
+        ports:
+        - containerPort: 5001
+          name: "http"
+        livenessProbe:
+          exec:
+            command:
+            - ipfs
+            - version
+          initialDelaySeconds: 30
+          periodSeconds: 60
+        readinessProbe:
+          exec:
+            command:
+            - ipfs
+            - version
+          initialDelaySeconds: 30
+          periodSeconds: 60
