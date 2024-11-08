@@ -5,7 +5,7 @@ metadata:
   namespace: prod
 plugin: cors
 config:
-  credentials: true  # Allow credentials if needed (cookies, auth headers)
+  credentials: true
   methods:
     - GET
     - HEAD
@@ -21,9 +21,11 @@ config:
     - X-Requested-With
     - Origin
     - X-Deal-Parameter
-  private_network: false
+    - Encryption
+    - X-User-Key
   origins:
     - '*'
   max_age: null
   preflight_continue: false
-  exposed_headers: null
+  exposed_headers:
+    - X-User-Key

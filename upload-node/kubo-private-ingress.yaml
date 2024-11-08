@@ -12,7 +12,7 @@ metadata:
     konghq.com/strip-path: "false"
     konghq.com/request-buffering: "false"
     konghq.com/response-buffering: "false"
-    konghq.com/plugins: "kubo-private-guard-plugin,kubo-private-kubo-response-plugin,kubo-private-cors-plugin"
+    konghq.com/plugins: "kubo-private-guard-plugin,kubo-private-cors-plugin,kubo-private-kubo-response-plugin"
 spec:
   ingressClassName: kong
   tls:

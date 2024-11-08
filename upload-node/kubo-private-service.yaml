@@ -4,9 +4,9 @@ metadata:
   name: kubo-private-service
   namespace: prod
   annotations:
-    konghq.com/read-timeout: "1000000"
-    konghq.com/connect-timeout: "1000000"
-    konghq.com/write-timeout: "1000000"
+    konghq.com/read-timeout: "3000000"
+    konghq.com/connect-timeout: "3000000"
+    konghq.com/write-timeout: "3000000"
 spec:
   selector:
     app: kubo-private

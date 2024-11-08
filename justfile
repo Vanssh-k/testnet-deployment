@@ -124,4 +124,4 @@ deploy-kubo-gateway: build-push-kubo-gateway
 # Create configmap for kong plugins
 create-kong-plugins:
     kubectl create configmap kong-kubo-response-plugin-cm --from-file ./kong/plugins/kubo-response-plugin/src -n kong --dry-run=client --output=yaml > ./kong/setup/plugins/kong-kubo-response-plugin-cm.yaml
-    kubectl create configmap kong-lighthouse-auth-plugin-cm --from-file ./kong/plugins/lighthouse-auth-plugin/src -n kong --dry-run=client --output=yaml > ./kong/core/plugins/kong-lighthouse-auth-plugin-cm.yaml
+    kubectl create configmap kong-lighthouse-auth-plugin-cm --from-file ./kong/plugins/lighthouse-auth-plugin/src -n kong --dry-run=client --output=yaml > ./kong/setup/plugins/kong-lighthouse-auth-plugin-cm.yaml
