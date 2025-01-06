@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lighthouse-backend-ingress
+  namespace: prod
+  labels:
+    app: lighthouse-backend
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    konghq.com/protocols: "https"
+    konghq.com/https-redirect-status-code: "301"
+    konghq.com/strip-path: "true"
+spec:
+  ingressClassName: kong
+  tls:
+  - secretName: lighthouse-backend-tls
+    hosts:
+    - skynet.lighthouse.storage
+  rules:
+    - host: skynet.lighthouse.storage
+      http:
+        paths:
+          - path: /api/v0/
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: lighthouse-backend-service
+                port:
+                  number: 3000

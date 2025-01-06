@@ -1,0 +1,10 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: kubo-private-kubo-response-plugin
+  namespace: prod
+config:
+  endpoint: https://zdzdskiytrzy4xrjeqn3n3d4rm0uekfd.lambda-url.us-east-1.on.aws/
+  user_identifier : "X-User-Key"
+  endpoint_validation_token : "jfsdkljflksdjfklsdj"
+plugin: kubo-response

@@ -1,3 +1,19 @@
+# environment
+.env
+.env.*
+.*-env/
+
+.DS_STORE
+.vscode/
+.idea/
+*.db
+
+static/
+images/
+
+# k8s
+/**/*-secrets.yaml
+
 keys*
 cron-jobs/.env
 cron-jobs/dist

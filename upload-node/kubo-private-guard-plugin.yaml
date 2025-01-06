@@ -1,0 +1,10 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: kubo-private-guard-plugin
+  namespace: prod
+config:
+  validation_endpoint: "https://api.lighthouse.storage/api/auth/verify_access_token"
+  token_header : "Authorization"
+  user_header_value : "X-User-Key"
+plugin: guard

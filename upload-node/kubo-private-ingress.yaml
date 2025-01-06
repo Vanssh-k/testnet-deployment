@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kubo-private-ingress
+  namespace: prod
+  labels:
+    app: kubo-private
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # konghq.com/protocols: "https"
+    # # konghq.com/https-redirect-status-code: "301"
+    konghq.com/strip-path: "false"
+    konghq.com/request-buffering: "false"
+    konghq.com/response-buffering: "false"
+    konghq.com/plugins: "kubo-private-guard-plugin,kubo-private-cors-plugin,kubo-private-kubo-response-plugin"
+spec:
+  ingressClassName: kong
+  tls:
+  - secretName: upload.lighthouse.storage
+    hosts:
+    - upload.lighthouse.storage
+  rules:
+    - host: upload.lighthouse.storage
+      http:
+        paths:
+          - path: /api/v0/add
+            pathType: Exact
+            backend:
+              service:
+                name: kubo-private-service
+                port:
+                  number: 5001
