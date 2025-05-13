@@ -4,7 +4,7 @@ import morgan from 'morgan';
 import bodyParser from 'body-parser';
 import cron from 'node-cron';
 import dotenv from 'dotenv';
-import config from './config.js';
+import config from './config/index.js';
 import { getFileList } from './db/getFileList.js';
 import { getFileListByPublicKey } from './db/fileListByPublicKey.js';
 
