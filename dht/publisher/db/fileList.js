@@ -2,7 +2,7 @@
 import config from '../config/index.js'
 import ddbClient from './ddbClient.js'
 
-export const fileSummary = async (date) => {
+export const fileList = async (date) => {
   try {
     const params = {
       TableName: config.ipfs_files_table,
