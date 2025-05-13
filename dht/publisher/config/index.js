@@ -10,6 +10,7 @@ const baseConfig = {
   auth_token: process.env.AUTH_TOKEN ?? '',
   telegram_bot_id: process.env.TELEGRAM_BOT_ID ?? '',
   telegram_notification_group_id: process.env.TELEGRAM_NOTIFICATION_GROUP_ID ?? '',
+  dht_endpoint: process.env.DHT_ENDPOINT || 'http://nginx:86/api/v0/routing/provide',
 }
 
 export default baseConfig

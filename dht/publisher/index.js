@@ -7,12 +7,14 @@ import dotenv from 'dotenv';
 import config from './config/index.js';
 import { getFileList } from './db/getFileList.js';
 import { getFileListByPublicKey } from './db/fileListByPublicKey.js';
+import { sendTelegramMessage } from './service/telegram.js';
+import { startBot } from './service/telegram.js';
 
 dotenv.config();
 
+startBot();
+
 const app = express();
-const DHT_ENDPOINT = process.env.DHT_ENDPOINT || 'http://nginx:86/api/v0/routing/provide';
-// const DHT_ENDPOINT = 'http://127.0.0.1:86/api/v0/routing/provide';
 const BATCH_SIZE = 100;
 const COOLDOWN_PERIOD = 2000; // 2 seconds
 
@@ -22,11 +24,11 @@ app.use(morgan('dev'));
 
 const publicKeyList = [
 	"0xcd3a0cc4baefd8cfe4830351841687b162aaa680",
-//	"0x2de3184373ff02e1bca83cce553943def008ab31",
-//	"0x01cb023186cab05220554ee75b4d69921dd051f1",
-//	"0xb9deb1b2de3f9fbd66b8d777674dbe693837064d",
-//	"0x898b2500c4fed262d7cc564dd892a34b33da0a41",
-//	"0x1703ce186cd52d804e1e450e5b1e86d887fb535c"
+	"0x2de3184373ff02e1bca83cce553943def008ab31",
+	"0x01cb023186cab05220554ee75b4d69921dd051f1",
+	"0xb9deb1b2de3f9fbd66b8d777674dbe693837064d",
+	"0x898b2500c4fed262d7cc564dd892a34b33da0a41",
+	"0x1703ce186cd52d804e1e450e5b1e86d887fb535c"
 ]
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -34,39 +36,59 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const sendToDHT = async (cid) => {
   try {
     console.log(`Publishing: `, cid);
-    const response = await axios.post(`${DHT_ENDPOINT}?arg=${cid}&verbose=false`);
+    const response = await axios.post(`${config.dht_endpoint}?arg=${cid}&verbose=false`);
     if (response.status === 200) {
       console.log(`Publish Success for CID: ${cid}, Response:`, response.data);
+      return true;
     } else {
       console.error(`Publish Failed for CID: ${cid}, Status: ${response.status}`);
+      return false;
     }
   } catch (err) {
     console.error(`Error while publishing CID: ${cid}, Message: ${err.message}`, err.response?.data || 'No additional error information');
+    return false;
   }
 };
 
 const publishBatch = async (batch) => {
-  await Promise.all(batch.map((cid) => sendToDHT(cid.cid)));
+  const results = await Promise.all(batch.map((cid) => sendToDHT(cid.cid)));
+  return results.filter(Boolean).length;
 };
 
 const publishRecordsForWhitelistPublicKeys = async () => {
+  let successCount = 0;
+  let failedCount = 0;
   for(let i=0; i<publicKeyList.length; i++){
     const cidList = await getFileListByPublicKey(publicKeyList[i])
     for (let i = 0; i < cidList.length; i += BATCH_SIZE) {
         const batch = cidList.slice(i, i + BATCH_SIZE);
-        await publishBatch(batch);
+        const success = await publishBatch(batch);
+        if(success > 0){
+          successCount += success;
+        } else {
+          failedCount += batch.length - success;
+        }
         await delay(COOLDOWN_PERIOD);
     }
   }
+  await sendTelegramMessage(`Whitelist Public Key Publish\nSuccess ${successCount} CIDs\nFailed ${failedCount} CIDs`);
 };
 
 const publishRecords = async () => {
+  let successCount = 0;
+  let failedCount = 0;
   const cidList = await getFileList()
   for (let i = 0; i < cidList.length; i += BATCH_SIZE) {
     const batch = cidList.slice(i, i + BATCH_SIZE);
-    await publishBatch(batch);
-    await delay(COOLDOWN_PERIOD)
+    const success = await publishBatch(batch);
+        if(success > 0){
+          successCount += success;
+        } else {
+          failedCount += batch.length - success;
+        }
+        await delay(COOLDOWN_PERIOD);
   }
+  await sendTelegramMessage(`All CIDs Publish\nSuccess ${successCount} CIDs\nFailed ${failedCount} CIDs`);
 };
 
 cron.schedule('0 0 * * *', async () => {
