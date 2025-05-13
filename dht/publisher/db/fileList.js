@@ -1,5 +1,6 @@
+
 import config from '../config/index.js'
-import ddbClient from '../ddbClient.js'
+import ddbClient from './ddbClient.js'
 
 export const fileSummary = async (date) => {
   try {

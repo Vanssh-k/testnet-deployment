@@ -1,4 +1,5 @@
 
+import config from '../config/index.js'
 import ddbClient from './ddbClient.js'
 
 export const getFileListByPublicKey = async (publicKey) => {
