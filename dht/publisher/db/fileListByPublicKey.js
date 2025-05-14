@@ -18,7 +18,7 @@ export const getFileListByPublicKey = async (publicKey) => {
           ScanIndexForward: false,
           ExclusiveStartKey: exclusiveStartKey,
         }
-        record = await ddbClient.query(params).promise()
+        record = await ddbClient.query(params)
         
         for(let i=0; i<record.Items.length; i++) {
           list.push(record.Items[i])
