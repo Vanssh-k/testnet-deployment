@@ -3,7 +3,7 @@ import config from '../config/index.js'
 import ddbClient from './ddbClient.js'
 
 export const getFileListByPublicKey = async (publicKey) => {
-  let exclusiveStartKey = null
+  let exclusiveStartKey = undefined
   let record
   const list = []
   let move = true
