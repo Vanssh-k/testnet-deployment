@@ -1,0 +1,7 @@
+local config = {
+    auth_url = "{{AUTH_URL}}",
+    lambda_url = "{{LAMBDA_URL}}",
+    auth_token = "{{AUTH_TOKEN}}"
+}
+
+return config
