@@ -37,13 +37,9 @@ ENV PATH="/usr/local/openresty/bin:/usr/local/openresty/nginx/sbin:$PATH"
 
 # Create config directory and copy template
 RUN mkdir -p /etc/nginx/lua
-COPY config.lua.template /etc/nginx/lua/config.lua.template
-
-# Generate config file
-RUN sed -e "s|{{AUTH_URL}}|${AUTH_URL}|g" \
-        -e "s|{{LAMBDA_URL}}|${LAMBDA_URL}|g" \
-        -e "s|{{AUTH_TOKEN}}|${AUTH_TOKEN}|g" \
-        /etc/nginx/lua/config.lua.template > /etc/nginx/lua/config.lua
+COPY lua/config.lua /etc/nginx/lua/config.lua
+COPY lua/utils.lua /etc/nginx/lua/utils.lua
+COPY lua/api_handlers.lua /etc/nginx/lua/api_handlers.lua
 
 # Clone IPFS & Install plugins
 RUN git clone https://github.com/ipfs/kubo && \
@@ -99,7 +95,6 @@ RUN luarocks install lua-resty-http && luarocks install lua-cjson
 
 # Copy OpenResty config
 COPY openresty.conf /usr/local/openresty/nginx/conf/nginx.conf
-COPY utils.lua /etc/nginx/lua/utils.lua
 
 # Ensure Nginx log directory exists
 RUN mkdir -p /var/log/nginx
