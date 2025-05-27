@@ -38,6 +38,8 @@ ENV PATH="/usr/local/openresty/bin:/usr/local/openresty/nginx/sbin:$PATH"
 # Create config directory and copy template
 RUN mkdir -p /etc/nginx/lua
 COPY lua/config.lua /etc/nginx/lua/config.lua
+COPY lua/auth.lua /etc/nginx/lua/auth.lua
+COPY lua/dag_handlers.lua /etc/nginx/lua/dag_handlers.lua
 COPY lua/utils.lua /etc/nginx/lua/utils.lua
 COPY lua/api_handlers.lua /etc/nginx/lua/api_handlers.lua
 
