@@ -66,7 +66,7 @@ RUN  echo "IPFS VERSION IS -- $(ipfs version)"
 ENV IPFS_PATH=/data/ipfs
 RUN mkdir -p ${IPFS_PATH} 
 RUN ipfs init -p server
-    
+
 RUN ipfs config Datastore.StorageMax 1EB && \
     ipfs config Routing.Type none && \
     ipfs config Gateway.NoFetch --json true && \
@@ -79,21 +79,6 @@ RUN echo "{\"mounts\":[{\"bucket\":\"${AWS_S3_BUCKET}\",\"mountpoint\":\"/blocks
 
 # Install Lua dependencies
 RUN luarocks install lua-resty-http && luarocks install lua-cjson
-
-# Install Loki & Promtail
-# WORKDIR /usr/local/bin
-# RUN apt update -y && apt install -y unzip && \
-#     curl -O -L "https://github.com/grafana/loki/releases/latest/download/promtail-linux-amd64.zip" && \
-#     unzip promtail-linux-amd64.zip && \
-#     chmod +x promtail-linux-amd64 && \
-#     mv promtail-linux-amd64 promtail && \
-#     rm promtail-linux-amd64.zip
-
-# Verify Loki & Promtail binaries
-# RUN file /usr/local/bin/promtail
-
-# Copy Promtail config
-# COPY promtail-config.yaml /etc/promtail-config.yaml
 
 # Copy OpenResty config
 COPY openresty.conf /usr/local/openresty/nginx/conf/nginx.conf
@@ -115,8 +100,6 @@ RUN echo '#!/bin/sh' > /entrypoint.sh && \
     echo 'echo "Starting IPFS..."' >> /entrypoint.sh && \
     echo 'ipfs daemon &' >> /entrypoint.sh && \
     echo 'sleep 5' >> /entrypoint.sh && \
-    # echo 'echo "Starting Promtail..."' >> /entrypoint.sh && \
-    # echo '/usr/local/bin/promtail -config.file=/etc/promtail-config.yaml &' >> /entrypoint.sh && \
     echo 'sleep 5' >> /entrypoint.sh && \
     echo 'echo "Starting OpenResty..."' >> /entrypoint.sh && \
     echo 'openresty -g "daemon off;" &' >> /entrypoint.sh && \
