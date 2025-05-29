@@ -3,23 +3,22 @@ local http = require "resty.http"
 local json = require "cjson.safe"
 local config = require "config"
 
-local function get_mime_type(filename)
-    local ext = filename:match("^.+(%..+)$")
-    local mime_types = {
-        [".txt"] = "text/plain",
-        [".json"] = "application/json",
-        [".svg"] = "image/svg+xml",
-        [".jpg"] = "image/jpeg",
-        [".jpeg"] = "image/jpeg",
-        [".png"] = "image/png",
-        [".gif"] = "image/gif",
-        [".pdf"] = "application/pdf",
-        [".mp4"] = "video/mp4",
-        [".mp3"] = "audio/mpeg",
-        [".zip"] = "application/zip",
-        [".tar"] = "application/x-tar",
+-- Function to send standardized error responses to the user
+function _M.send_error(status_code, error_message, details)
+    ngx.status = status_code
+    ngx.header["Content-Type"] = "application/json"
+    
+    local error_response = {
+        success = false,
+        error = error_message
     }
-    return mime_types[ext] or "application/octet-stream"
+    
+    if details then
+        error_response.details = details
+    end
+    
+    ngx.say(json.encode(error_response))
+    return ngx.exit(status_code)
 end
 
 function _M.create_record_normal(premature, uri, record_data, public_key)
@@ -27,7 +26,7 @@ function _M.create_record_normal(premature, uri, record_data, public_key)
     local success, decoded_data = pcall(json.decode, record_data)
     if not success or not decoded_data then
         ngx.log(ngx.ERR, "Failed to decode record data: " .. tostring(record_data))
-        return
+        return false, "Failed to decode record data"
     end
     local httpc = http.new()
     local payload = {
@@ -35,7 +34,6 @@ function _M.create_record_normal(premature, uri, record_data, public_key)
         cid = decoded_data.Hash,
         size = decoded_data.Size,
         encryption = false,
-        mimeType = decoded_data.Name and get_mime_type(decoded_data.Name) or "application/octet-stream",
         publicKey = public_key
     }
     
@@ -61,9 +59,13 @@ function _M.create_record_normal(premature, uri, record_data, public_key)
     
     if not res then
         ngx.log(ngx.ERR, "Failed to store record: " .. (err or "unknown error"))
+        return false, "Failed to store record: " .. (err or "unknown error")
     elseif res.status ~= 200 then
         ngx.log(ngx.ERR, "Failed to store record, status: " .. res.status .. ", body: " .. res.body)
+        return false, "Failed to store record, status: " .. res.status
     end
+    
+    return true
 end
 
 function _M.create_record_encrypted(premature, uri, record_data, public_key)
@@ -75,11 +77,13 @@ function _M.create_record_encrypted(premature, uri, record_data, public_key)
     
     local success, decoded_data = pcall(json.decode, record_data)
     if not success or not decoded_data then
-        ngx.log(ngx.ERR, "Failed to decode record data: " .. tostring(data))
-        return
+        ngx.log(ngx.ERR, "Failed to decode record data: " .. tostring(record_data))
+        return false, "Failed to decode encrypted record data"
     end
 
     local records = type(decoded_data) == "table" and decoded_data[1] and decoded_data or {decoded_data}
+    local errors = {}
+    local success_count = 0
 
     for _, record in ipairs(records) do
         local payload = {
@@ -87,7 +91,6 @@ function _M.create_record_encrypted(premature, uri, record_data, public_key)
             cid = record.Hash,
             size = record.Size,
             encryption = true,
-            mimeType = record.Name and get_mime_type(record.Name) or "application/octet-stream",
             publicKey = public_key
         }
 
@@ -107,11 +110,22 @@ function _M.create_record_encrypted(premature, uri, record_data, public_key)
 
         if not res then
             ngx.log(ngx.ERR, "Failed to send record to logging endpoint: " .. (err or "unknown error"))
+            table.insert(errors, "Failed to send record " .. (record.Hash or "unknown") .. ": " .. (err or "unknown error"))
         elseif res.status ~= 200 then
             ngx.log(ngx.ERR, "Unexpected response from logging endpoint. Status: " .. res.status .. ", Body: " .. (res.body or "nil"))
+            table.insert(errors, "Failed to send record " .. (record.Hash or "unknown") .. ": status " .. res.status)
         else
             ngx.log(ngx.INFO, "Successfully sent record to logging endpoint for CID: " .. (record.Hash or "nil"))
+            success_count = success_count + 1
         end
+    end
+    
+    if #errors > 0 and success_count == 0 then
+        return false, table.concat(errors, "; ")
+    elseif #errors > 0 then
+        return true, "Partial success: " .. success_count .. " records processed, " .. #errors .. " failed"
+    else
+        return true
     end
 end
 

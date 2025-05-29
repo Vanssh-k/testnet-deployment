@@ -3,6 +3,7 @@ local http = require "resty.http"
 local json = require "cjson.safe"
 local config = require "config"
 local auth = require "auth"
+local utils = require "utils"
 
 -- Use the authenticate function from the auth module
 _M.authenticate = auth.authenticate
@@ -34,15 +35,19 @@ function _M.process_response()
             ngx.ctx.line_count = ngx.ctx.line_count + 1
             if ngx.ctx.line_count > ngx.ctx.max_lines then
                 ngx.log(ngx.ERR, "Response too large, exceeded " .. ngx.ctx.max_lines .. " lines")
+                ngx.arg[1] = json.encode({
+                    success = false,
+                    error = "Response too large, exceeded maximum lines limit",
+                    details = "Too many files uploaded"
+                })
+                ngx.arg[2] = true
                 ngx.status = ngx.HTTP_REQUEST_ENTITY_TOO_LARGE
-                ngx.say("Response too large, too many files uploaded")
-                ngx.exit(ngx.HTTP_REQUEST_ENTITY_TOO_LARGE)
+                return
             end
             local json_object = line:match("(%b{})")
             if json_object then
                 local decoded = json.decode(json_object)
                 if decoded then
-                    ngx.log(ngx.ERR, "Decoded JSON: " .. json_object)
                     ngx.ctx.last_json_object = json_object
                     table.insert(ngx.ctx.all_json_objects, json_object)
                 else
@@ -56,9 +61,14 @@ function _M.process_response()
     if eof then
         if not ngx.ctx.last_json_object then
             ngx.log(ngx.ERR, "No valid JSON objects found in response!")
+            ngx.arg[1] = json.encode({
+                success = false,
+                error = "No valid JSON found in response",
+                details = "The server received an invalid response format"
+            })
+            ngx.arg[2] = true
             ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-            ngx.say("No valid JSON found in response")
-            ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
+            return
         end
 
         local headers = ngx.req.get_headers()

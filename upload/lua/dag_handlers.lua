@@ -3,6 +3,7 @@ local http = require "resty.http"
 local json = require "cjson.safe"
 local config = require "config"
 local auth = require "auth"
+local utils = require "utils"
 
 -- Use the authenticate function from the auth module
 _M.authenticate = auth.authenticate
@@ -60,7 +61,11 @@ function _M.process_dag_import_response()
         if not response_data or not response_data.Root or not response_data.Root.Cid then
             ngx.log(ngx.ERR, "Invalid response from IPFS: " .. (response_body or ""))
             ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-            ngx.arg[1] = json.encode({error = "Invalid response from IPFS"})
+            ngx.arg[1] = json.encode({
+                success = false,
+                error = "Invalid response from IPFS",
+                details = "Could not process CAR file import"
+            })
             ngx.arg[2] = true
             return
         end
@@ -85,7 +90,8 @@ function _M.process_dag_import_response()
                 success = true,
                 cid = cid,
                 message = "CAR file import complete. Size unknown.",
-                file = file_info
+                file = file_info,
+                warning = "Could not fetch file size due to missing shared memory"
             })
             ngx.arg[2] = true
             
@@ -94,7 +100,7 @@ function _M.process_dag_import_response()
                 if premature then return end
                 
                 local utils = require "utils"
-                local ok, err = utils.create_record_normal(nil, uri, file_info_json, publicKey, false)
+                local ok, err = utils.create_record_normal(nil, uri, file_info_json, publicKey)
                 if not ok then
                     ngx.log(ngx.ERR, "Failed to create record for CAR file with CID " .. cid .. ": " .. (err or "unknown error"))
                 end
@@ -122,7 +128,8 @@ function _M.process_dag_import_response()
                     Name = filename,
                     Hash = cid,
                     Size = "0"
-                }
+                },
+                warning = "Failed to fetch file size"
             }
             
             -- Fetch DAG stats to get the size
@@ -147,13 +154,16 @@ function _M.process_dag_import_response()
                     -- Update result with actual size
                     result.file.Size = size
                     result.message = "CAR file import complete"
+                    result.warning = nil
                     
                     ngx.log(ngx.INFO, "Processing CAR file complete. CID: " .. cid .. ", Size: " .. size)
                 else
                     ngx.log(ngx.ERR, "Failed to decode stat_data for CAR file with CID " .. cid .. ": " .. (stat_res.body or "empty body"))
+                    result.warning = "Failed to decode size information from IPFS"
                 end
             else
                 ngx.log(ngx.ERR, "Failed to fetch dag stat for CAR file with CID " .. cid .. ": " .. (stat_err or (stat_res and stat_res.body) or "unknown"))
+                result.warning = "Failed to fetch size information: " .. (stat_err or "unknown error")
             end
             
             -- Create record
@@ -164,9 +174,15 @@ function _M.process_dag_import_response()
             }
             
             local utils = require "utils"
-            local ok, err = utils.create_record_normal(nil, uri, json.encode(file_info), publicKey, false)
+            local ok, err = utils.create_record_normal(nil, uri, json.encode(file_info), publicKey)
             if not ok then
                 ngx.log(ngx.ERR, "Failed to create record for CAR file with CID " .. cid .. ": " .. (err or "unknown error"))
+                -- Add record creation error to the warning
+                if result.warning then
+                    result.warning = result.warning .. "; Failed to store record: " .. (err or "unknown error")
+                else
+                    result.warning = "Failed to store record: " .. (err or "unknown error")
+                end
             else
                 ngx.log(ngx.INFO, "Successfully created record for CAR file. CID: " .. cid .. ", PublicKey: " .. publicKey)
             end
@@ -185,7 +201,8 @@ function _M.process_dag_import_response()
                 success = true,
                 cid = cid,
                 message = "CAR file import complete. Size calculation failed to start.",
-                file = file_info
+                file = file_info,
+                warning = "Failed to start size calculation: " .. (err or "unknown error")
             })
             ngx.arg[2] = true
             return
@@ -222,7 +239,8 @@ function _M.process_dag_import_response()
             success = true,
             cid = cid,
             message = "CAR file import complete. Size calculation in progress.",
-            file = file_info
+            file = file_info,
+            warning = "Size calculation timed out, it will continue in the background"
         })
         ngx.arg[2] = true
     end
@@ -232,8 +250,8 @@ end
 function _M.handle_dag_import()
     ngx.log(ngx.WARN, "handle_dag_import() called directly, but this is now handled by process_dag_import_response()")
     -- This function should no longer be used since we're using proxy_pass and body_filter
-    -- Return a 204 No Content to allow the proxy_pass to handle it
-    ngx.exit(ngx.HTTP_NO_CONTENT)
+    return utils.send_error(ngx.HTTP_BAD_REQUEST, "API endpoint changed", 
+        "This endpoint is deprecated, please use the new proxy_pass method")
 end
 
 return _M 
