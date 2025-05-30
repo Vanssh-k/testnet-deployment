@@ -21,6 +21,13 @@ function _M.process_response()
     local chunk = ngx.arg[1]
     local eof = ngx.arg[2]
 
+    -- Skip processing if the request already has an error status code or auth failed
+    if ngx.status >= 400 or ngx.ctx.auth_failed then
+        ngx.arg[1] = chunk
+        ngx.arg[2] = eof
+        return
+    end
+
     -- Initialize context
     if not ngx.ctx.last_json_object then
         ngx.ctx.last_json_object = nil

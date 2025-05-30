@@ -8,7 +8,9 @@ function _M.authenticate()
     local token = ngx.req.get_headers()["Authorization"]
     if not token or not token:match("^Bearer%s+(.+)$") then
         ngx.log(ngx.ERR, "Auth Failed: Missing or invalid token")
-        return utils.send_error(ngx.HTTP_UNAUTHORIZED, "Authentication failed", "Missing or invalid authentication token")
+        ngx.ctx.auth_failed = true
+        utils.send_error(ngx.HTTP_UNAUTHORIZED, "Authentication failed", "Missing or invalid token")
+        return ngx.exit(ngx.HTTP_UNAUTHORIZED)
     end
     token = token:match("^Bearer%s+(.+)$")
     local httpc = http.new()
@@ -21,24 +23,32 @@ function _M.authenticate()
     })
     if not auth_res then
         ngx.log(ngx.ERR, "Auth Failed: No response from API - " .. (auth_err or "unknown error"))
-        return utils.send_error(ngx.HTTP_UNAUTHORIZED, "Authentication failed", 
+        ngx.ctx.auth_failed = true
+        utils.send_error(ngx.HTTP_UNAUTHORIZED, "Authentication failed", 
             "Unable to reach authentication service: " .. (auth_err or "unknown error"))
+        return ngx.exit(ngx.HTTP_UNAUTHORIZED)
     elseif auth_res.status ~= 200 then
         ngx.log(ngx.ERR, "Auth Failed: API returned " .. auth_res.status .. " - Response: " .. auth_res.body)
-        return utils.send_error(ngx.HTTP_UNAUTHORIZED, "Authentication failed", 
+        ngx.ctx.auth_failed = true
+        utils.send_error(ngx.HTTP_UNAUTHORIZED, "Authentication failed", 
             "Authentication service returned error " .. auth_res.status)
+        return ngx.exit(ngx.HTTP_UNAUTHORIZED)
     end
     local auth_data = json.decode(auth_res.body)
     if not auth_data or not auth_data.publicKey then
         ngx.log(ngx.ERR, "Auth Failed: Invalid API response - " .. auth_res.body)
-        return utils.send_error(ngx.HTTP_UNAUTHORIZED, "Authentication failed", 
+        ngx.ctx.auth_failed = true
+        utils.send_error(ngx.HTTP_UNAUTHORIZED, "Authentication failed", 
             "Invalid response from authentication service")
+        return ngx.exit(ngx.HTTP_UNAUTHORIZED)
     end
     ngx.req.set_header("publicKey", auth_data.publicKey)
     if tonumber(auth_data.dataLimit) - tonumber(auth_data.dataUsed) <= 0 then
         ngx.log(ngx.ERR, "Auth Failed: Data limit exceeded for user " .. auth_data.publicKey)
-        return utils.send_error(ngx.HTTP_FORBIDDEN, "Data limit exceeded", 
+        ngx.ctx.auth_failed = true
+        utils.send_error(ngx.HTTP_FORBIDDEN, "Data limit exceeded", 
             "Your account has reached its storage limit")
+        return ngx.exit(ngx.HTTP_FORBIDDEN)
     end
     
     -- Check for plan expiration
@@ -49,8 +59,10 @@ function _M.authenticate()
         
         if (current_time - created_at_timestamp > fifteen_days_in_ms) and (tonumber(auth_data.dataLimit) <= 5368709120) then
             ngx.log(ngx.ERR, "Auth Failed: Trial expired for user " .. auth_data.publicKey)
-            return utils.send_error(ngx.HTTP_FORBIDDEN, "Trial expired", 
+            ngx.ctx.auth_failed = true
+            utils.send_error(ngx.HTTP_FORBIDDEN, "Trial expired", 
                 "Your trial period has expired. Please upgrade to a paid plan")
+            return ngx.exit(ngx.HTTP_FORBIDDEN)
         end
     end
 end

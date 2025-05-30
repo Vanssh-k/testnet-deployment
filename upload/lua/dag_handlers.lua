@@ -21,6 +21,11 @@ end
 
 -- Process the response from IPFS dag/import in the body filter phase
 function _M.process_dag_import_response()
+    -- Skip processing if the request already has an error status code or auth failed
+    if ngx.status >= 400 or ngx.ctx.auth_failed then
+        return
+    end
+    
     -- Buffer the response chunks
     if ngx.arg[1] then
         table.insert(response_buffer, ngx.arg[1])
