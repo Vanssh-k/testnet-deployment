@@ -81,47 +81,26 @@ function _M.process_response()
         local headers = ngx.req.get_headers()
         ngx.ctx.publicKey = headers["publicKey"]
         ngx.ctx.encryption = headers["encryption"] and headers["encryption"]:lower() == "true"
-        local utils = require("utils")
 
         if ngx.ctx.encryption then
             -- Use all collected JSON objects for encrypted responses
             local final_json_array = "[" .. table.concat(ngx.ctx.all_json_objects, ",") .. "]"
             ngx.ctx.record_data = final_json_array
-            
-            -- Process record creation synchronously
-            local success, err = utils.create_record_encrypted(nil, ngx.var.uri, ngx.ctx.record_data, ngx.ctx.publicKey)
-            if not success then
-                ngx.log(ngx.ERR, "Failed to create encrypted record: " .. (err or "unknown error"))
-                ngx.arg[1] = json.encode({
-                    success = false,
-                    error = "Failed to store record",
-                    details = err or "Unknown error during record creation"
-                })
-                ngx.arg[2] = true
-                ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-                return
+            local utils = require("utils")
+            local ok, err = ngx.timer.at(0, utils.create_record_encrypted, ngx.var.uri, ngx.ctx.record_data, ngx.ctx.publicKey)
+            if not ok then
+                ngx.log(ngx.ERR, "Failed to create timer for encrypted record: " .. (err or "unknown error"))
             end
-            
             ngx.arg[1] = final_json_array
             ngx.arg[2] = true
         else
             -- Normal unencrypted uploads
             ngx.ctx.record_data = ngx.ctx.last_json_object
-            
-            -- Process record creation synchronously
-            local success, err = utils.create_record_normal(nil, ngx.var.uri, ngx.ctx.record_data, ngx.ctx.publicKey)
-            if not success then
-                ngx.log(ngx.ERR, "Failed to create record: " .. (err or "unknown error"))
-                ngx.arg[1] = json.encode({
-                    success = false,
-                    error = "Failed to store record",
-                    details = err or "Unknown error during record creation"
-                })
-                ngx.arg[2] = true
-                ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-                return
+            local utils = require("utils")
+            local ok, err = ngx.timer.at(0, utils.create_record_normal, ngx.var.uri, ngx.ctx.record_data, ngx.ctx.publicKey)
+            if not ok then
+                ngx.log(ngx.ERR, "Failed to create timer: " .. (err or "unknown error"))
             end
-            
             ngx.arg[1] = ngx.ctx.last_json_object
             ngx.arg[2] = true
         end
