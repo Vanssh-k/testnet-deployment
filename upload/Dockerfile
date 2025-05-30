@@ -70,6 +70,7 @@ RUN ipfs init -p server
 RUN ipfs config Datastore.StorageMax 1EB && \
     ipfs config Routing.Type none && \
     ipfs config Gateway.NoFetch --json true && \
+    ipfs config Import.UnixFSChunker "size-1048576" && \
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]' && \
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST", "OPTIONS"]' && \
     ipfs bootstrap rm --all
