@@ -150,7 +150,6 @@ function _M.process_dag_import_response()
                 local stat_data
                 for obj in stat_res.body:gmatch("(%b{})") do
                     stat_data = json.decode(obj)
-                    if stat_data then break end
                 end
                 
                 if stat_data then
@@ -189,7 +188,7 @@ function _M.process_dag_import_response()
                     result.warning = "Failed to store record: " .. (err or "unknown error")
                 end
             else
-                ngx.log(ngx.INFO, "Successfully created record for CAR file. CID: " .. cid .. ", PublicKey: " .. publicKey)
+                ngx.log(ngx.INFO, "Successfully created record for CAR file. CID: " .. cid .. ", PublicKey: " .. (publicKey or "unknown"))
             end
             
             -- Store the result in shared memory and signal completion
@@ -213,39 +212,29 @@ function _M.process_dag_import_response()
             return
         end
         
-        -- Set a timeout for the background task
-        local timeout = 10  -- seconds
-        local sleep_interval = 0.1  -- seconds
-        local elapsed = 0
-        
-        -- Wait for the background task to complete or timeout
-        while elapsed < timeout do
-            ngx.sleep(sleep_interval)
-            elapsed = elapsed + sleep_interval
-            
-            local done = shared:get(key .. ":done")
-            if done then
-                local result = shared:get(key)
-                if result then
-                    ngx.arg[1] = result
-                    ngx.arg[2] = true
-                    
-                    -- Clean up
-                    shared:delete(key)
-                    shared:delete(key .. ":done")
-                    return
-                end
+        -- Check if result is already available (non-blocking)
+        local done = shared:get(key .. ":done")
+        if done then
+            local result = shared:get(key)
+            ngx.log(ngx.ERR, "Result: " .. result)
+            if result then
+                ngx.arg[1] = result
+                ngx.arg[2] = true
+                shared:delete(key)
+                return
             end
         end
         
-        -- If we've reached here, we timed out waiting for the background task
-        ngx.log(ngx.WARN, "Timed out waiting for DAG stats. Sending response without size for CID: " .. cid)
+        -- If result is not immediately available, return a response indicating background processing
+        ngx.log(ngx.INFO, "Background processing started for CID: " .. cid)
         ngx.arg[1] = json.encode({
             success = true,
             cid = cid,
-            message = "CAR file import complete. Size calculation in progress.",
-            file = file_info,
-            warning = "Size calculation timed out, it will continue in the background"
+            message = "CAR file import complete",
+            file = {
+                Name = filename,
+                Hash = cid
+            }
         })
         ngx.arg[2] = true
     end
