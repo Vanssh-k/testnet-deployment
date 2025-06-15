@@ -73,6 +73,8 @@ RUN ipfs config Datastore.StorageMax 1EB && \
     ipfs config Import.UnixFSChunker "size-1048576" && \
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]' && \
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST", "OPTIONS"]' && \
+    ipfs config --json AutoGC.Enabled false && \
+    ipfs config Reprovider.Interval "0" && \
     ipfs bootstrap rm --all
 
 RUN ipfs config --json Datastore.Spec "{\"mounts\":[{\"child\":{\"accessKey\":\"${AWS_ACCESS_KEY}\",\"bucket\":\"${AWS_S3_BUCKET}\",\"region\":\"${AWS_REGION}\",\"secretKey\":\"${AWS_SECRET_KEY}\",\"type\":\"s3ds\"},\"mountpoint\":\"/blocks\",\"prefix\":\"s3.datastore\",\"type\":\"measure\"},{\"child\": {\"compression\":\"none\",\"path\":\"datastore\",\"type\":\"levelds\"},\"mountpoint\": \"/\",\"prefix\":\"leveldb.datastore\",\"type\":\"measure\"}],\"type\":\"mount\"}"
@@ -97,15 +99,17 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Entrypoint script
 RUN echo '#!/bin/sh' > /entrypoint.sh && \
     echo 'set -e' >> /entrypoint.sh && \
-    echo 'trap "kill -TERM $PID" TERM INT' >> /entrypoint.sh && \
-    echo 'echo "Starting IPFS..."' >> /entrypoint.sh && \
-    echo 'ipfs daemon &' >> /entrypoint.sh && \
+    echo 'trap "kill -TERM $IPFS_PID $NGINX_PID" TERM INT' >> /entrypoint.sh && \
+    echo 'mkdir -p /var/log/ipfs' >> /entrypoint.sh && \
+    echo 'echo "Starting IPFS daemon with restart loop..."' >> /entrypoint.sh && \
+    echo '(while true; do echo "[IPFS] Launching..."; ipfs daemon 2>&1 | tee /dev/stdout & tee /dev/stderrs; echo "[IPFS] Crashed. Restarting in 10 seconds..." >&2; sleep 10; done) &' >> /entrypoint.sh && \
+    echo 'IPFS_PID=$!' >> /entrypoint.sh && \
     echo 'sleep 5' >> /entrypoint.sh && \
-    echo 'sleep 5' >> /entrypoint.sh && \
-    echo 'echo "Starting OpenResty..."' >> /entrypoint.sh && \
+    echo 'echo "Starting OpenResty (Nginx)..."' >> /entrypoint.sh && \
     echo 'openresty -g "daemon off;" &' >> /entrypoint.sh && \
-    echo 'PID=$!' >> /entrypoint.sh && \
-    echo 'wait $PID' >> /entrypoint.sh && \
+    echo 'NGINX_PID=$!' >> /entrypoint.sh && \
+    echo 'tail -F /var/log/ipfs/ipfs.log & TAIL_PID=$!' >> /entrypoint.sh && \
+    echo 'wait $IPFS_PID $NGINX_PID' >> /entrypoint.sh && \
     chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
