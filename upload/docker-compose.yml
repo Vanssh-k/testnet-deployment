@@ -1,4 +1,6 @@
-version: '3'
+version: "3"
+
+name: upload-service
 
 services:
   upload:
@@ -32,4 +34,4 @@ services:
       start_period: 10s
 
 volumes:
-  ipfs_data: 
+  ipfs_data:

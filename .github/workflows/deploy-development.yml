@@ -78,10 +78,10 @@ jobs:
           cd deployment
           
           # Stop existing containers
-          sudo docker-compose down || true
+          sudo docker-compose -p upload-service down || true
           
-          # Remove old images
-          sudo docker rmi upload:latest || true
+          # Remove old images and containers
+          sudo docker rmi upload-service_upload:latest || true
 
           # Clone or pull the repository
           echo "Current directory: $(pwd)"
@@ -100,8 +100,8 @@ jobs:
           # Copy upload service files to current directory
           cd upload
           
-          # Start services using docker-compose
-          sudo docker-compose up -d --build
+          # Start services using docker-compose with project name
+          sudo docker-compose -p upload-service up -d --build
           
           echo "Upload service deployment completed successfully!"
           EOF
@@ -136,29 +136,29 @@ jobs:
           # Check Docker containers status
           echo "Checking upload service Docker containers status..."
           ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'DOCKER_CHECK'
-            cd upload-service
+            cd upload
             
             # Check if our docker-compose containers are running
-            if ! sudo docker-compose ps --services | xargs -I {} sudo docker-compose ps {} | grep -q "Up"; then
+            if ! sudo docker-compose -p upload-service ps --services | xargs -I {} sudo docker-compose -p upload-service ps {} | grep -q "Up"; then
               echo "ERROR: Upload service Docker containers are not running!"
-              sudo docker-compose ps
+              sudo docker-compose -p upload-service ps
               exit 1
             fi
             
             # Check our container health status
             echo "Upload service container status:"
-            sudo docker-compose ps
+            sudo docker-compose -p upload-service ps
             
             # Check for any of our containers in unhealthy state
-            if sudo docker-compose ps | grep -E "(unhealthy|Exit|Restarting)" | grep -v "Paused"; then
+            if sudo docker-compose -p upload-service ps | grep -E "(unhealthy|Exit|Restarting)" | grep -v "Paused"; then
               echo "ERROR: Some upload service containers are unhealthy or have exited!"
-              sudo docker-compose logs --tail=50
+              sudo docker-compose -p upload-service logs --tail=50
               exit 1
             fi
             
             # Verify all our services are running
-            expected_services=$(sudo docker-compose config --services)
-            running_services=$(sudo docker-compose ps --services --filter "status=running")
+            expected_services=$(sudo docker-compose -p upload-service config --services)
+            running_services=$(sudo docker-compose -p upload-service ps --services --filter "status=running")
             
             if [ "$expected_services" != "$running_services" ]; then
               echo "ERROR: Not all expected upload services are running!"
