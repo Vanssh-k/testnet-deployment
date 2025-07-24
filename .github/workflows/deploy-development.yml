@@ -1,4 +1,4 @@
-name: Selective Deployment
+name: Deploy to Development
 
 on:
   push:
@@ -7,6 +7,16 @@ on:
   pull_request:
     branches: 
       - development
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to deploy'
+        required: true
+        default: 'upload'
+        type: choice
+        options:
+          - upload
+          - all
 
 jobs:
   detect-changes:
@@ -29,7 +39,10 @@ jobs:
 
   deploy-upload:
     needs: detect-changes
-    if: needs.detect-changes.outputs.upload-changed == 'true'
+    if: |
+      needs.detect-changes.outputs.upload-changed == 'true' || 
+      github.event_name == 'workflow_dispatch' && 
+      (github.event.inputs.service == 'upload' || github.event.inputs.service == 'all')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -109,7 +122,7 @@ jobs:
             export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
             export AWS_REGION=${{ secrets.AWS_REGION }}
             export AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
-            export AUTH_URL=${{ secrets.AUTH_URL }}
+            export AUTH_URL=${{ secrets.AWS_AUTH_URL }}
             export LAMBDA_URL=${{ secrets.LAMBDA_URL }}
             export AUTH_TOKEN=${{ secrets.AUTH_TOKEN }}
             
