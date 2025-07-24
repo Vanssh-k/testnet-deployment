@@ -1,10 +1,10 @@
-name: Selective Deployment
+name: Deploy to Production
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   detect-changes:
@@ -63,23 +63,126 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.PROD_AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and deploy upload service
+      - name: Write SSH key to file
         run: |
+          echo "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > private_key
+          chmod 600 private_key
+
+      - name: Deploy upload service to Ubuntu instance
+        run: |
+          # Create deployment script
+          cat > deploy-upload.sh << 'EOF'
+          #!/bin/bash
+          set -e
+          
+          echo "Starting upload service deployment..."
+          
+          # Fix Docker permissions
+          sudo usermod -aG docker ubuntu || true
+          sudo systemctl start docker || true
+          sudo systemctl enable docker || true
+          
+          # Navigate to application directory
+          cd deployment
+          
+          # Stop existing containers
+          docker-compose down || true
+
+          # Clone or pull the repository
+          echo "Current directory: $(pwd)"
+          echo "Git directory exists: $([ -d ".git" ] && echo "YES" || echo "NO")"
+          if [ ! -d ".git" ]; then
+            echo "Cloning repository..."
+            git clone https://x-access-token:${{ secrets.PROD_TOKEN_GITHUB_DEPLOY }}@github.com/Vanssh-k/testnet-deployment.git .
+          else
+            echo "Pulling latest changes..."
+            # Configure git to use token for all operations
+            git remote set-url origin https://x-access-token:${{ secrets.PROD_TOKEN_GITHUB_DEPLOY }}@github.com/Vanssh-k/testnet-deployment.git
+            git fetch origin
+            git reset --hard origin/main
+          fi
+          
+          # Copy upload service files to current directory
           cd upload
-          docker build -t upload-service .
-          docker tag upload-service:latest ${{ steps.login-ecr.outputs.registry }}/upload-service:latest
-          docker push ${{ steps.login-ecr.outputs.registry }}/upload-service:latest
+          
+          # Start services using docker-compose with project name
+          sudo docker-compose build --no-cache
+          sudo docker-compose up -d
+          
+          echo "Upload service deployment completed successfully!"
+          EOF
+          
+          # Create directory on server first
+          ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }} "sudo mkdir -p deployment && sudo chown ubuntu:ubuntu deployment"
+          
+          # Copy deployment script to server
+          scp -o StrictHostKeyChecking=no -i private_key deploy-upload.sh ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}:/tmp/
+          
+          # Execute deployment on server using the SSH key file
+          ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }} << 'SSHEOF'
+            # Make deployment script executable and run
+            chmod +x /tmp/deploy-upload.sh
+            
+            # Export environment variables for the deployment
+            export AWS_ACCESS_KEY_ID=${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+            export AWS_SECRET_ACCESS_KEY=${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+            export AWS_REGION=${{ secrets.PROD_AWS_REGION }}
+            export AWS_S3_BUCKET=${{ secrets.PROD_AWS_S3_BUCKET }}
+            export AUTH_URL=${{ secrets.PROD_AUTH_URL }}
+            export LAMBDA_URL=${{ secrets.PROD_LAMBDA_URL }}
+            export AUTH_TOKEN=${{ secrets.PROD_AUTH_TOKEN }}
+            
+            /tmp/deploy-upload.sh
+          SSHEOF
+
+      - name: Upload service health check
+        run: |
+          sleep 30
+          
+          # Check Docker containers status
+          echo "Checking upload service Docker containers status..."
+          ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }} << 'DOCKER_CHECK'
+            cd upload
+            
+            # Check if our docker-compose containers are running
+            if ! sudo docker-compose -p upload-service ps --services | xargs -I {} sudo docker-compose -p upload-service ps {} | grep -q "Up"; then
+              echo "ERROR: Upload service Docker containers are not running!"
+              sudo docker-compose -p upload-service ps
+              exit 1
+            fi
+            
+            # Check our container health status
+            echo "Upload service container status:"
+            sudo docker-compose -p upload-service ps
+            
+            # Check for any of our containers in unhealthy state
+            if sudo docker-compose -p upload-service ps | grep -E "(unhealthy|Exit|Restarting)" | grep -v "Paused"; then
+              echo "ERROR: Some upload service containers are unhealthy or have exited!"
+              sudo docker-compose -p upload-service logs --tail=50
+              exit 1
+            fi
+            
+            # Verify all our services are running
+            expected_services=$(sudo docker-compose -p upload-service config --services)
+            running_services=$(sudo docker-compose -p upload-service ps --services --filter "status=running")
+            
+            if [ "$expected_services" != "$running_services" ]; then
+              echo "ERROR: Not all expected upload services are running!"
+              echo "Expected services: $expected_services"
+              echo "Running services: $running_services"
+              exit 1
+            fi
+            
+            echo "All upload service Docker containers are running and healthy!"
+          DOCKER_CHECK
+          
+          # Check upload service health endpoint
+          echo "Checking upload service health endpoint..."
+          curl -f http://${{ secrets.PROD_SSH_HOST }}:8080/health || exit 1
