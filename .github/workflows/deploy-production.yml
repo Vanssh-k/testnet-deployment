@@ -1,0 +1,85 @@
+name: Selective Deployment
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      upload-changed: ${{ steps.changes.outputs.upload }}
+      upload-node-changed: ${{ steps.changes.outputs.upload-node }}
+      gateway-node-changed: ${{ steps.changes.outputs.gateway-node }}
+      kong-changed: ${{ steps.changes.outputs.kong }}
+      lighthouse-backend-changed: ${{ steps.changes.outputs.lighthouse-backend }}
+      pinning-changed: ${{ steps.changes.outputs.pinning }}
+      cron-jobs-changed: ${{ steps.changes.outputs.cron-jobs }}
+      dht-changed: ${{ steps.changes.outputs.dht }}
+      cid-indexing-changed: ${{ steps.changes.outputs.cid-indexing }}
+      ipfs-ipni-changed: ${{ steps.changes.outputs.ipfs-ipni }}
+      ipns-ipni-changed: ${{ steps.changes.outputs.ipns-ipni }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changes
+        id: changes
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            upload:
+              - 'upload/**'
+            upload-node:
+              - 'upload-node/**'
+            gateway-node:
+              - 'gateway-node/**'
+            kong:
+              - 'kong/**'
+            lighthouse-backend:
+              - 'lighthouse-backend/**'
+            pinning:
+              - 'pinning/**'
+            cron-jobs:
+              - 'cron-jobs/**'
+            dht:
+              - 'dht/**'
+            cid-indexing:
+              - 'cid-indexing/**'
+            ipfs-ipni:
+              - 'ipfs-ipni/**'
+            ipns-ipni:
+              - 'ipns-ipni/**'
+
+  deploy-upload:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.upload-changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and deploy upload service
+        run: |
+          cd upload
+          docker build -t upload-service .
+          docker tag upload-service:latest ${{ steps.login-ecr.outputs.registry }}/upload-service:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/upload-service:latest
