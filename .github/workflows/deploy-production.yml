@@ -131,13 +131,13 @@ jobs:
             chmod +x /tmp/deploy-upload.sh
             
             # Export environment variables for the deployment
-            export AWS_ACCESS_KEY_ID=${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
-            export AWS_SECRET_ACCESS_KEY=${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
-            export AWS_REGION=${{ secrets.PROD_AWS_REGION }}
-            export AWS_S3_BUCKET=${{ secrets.PROD_AWS_S3_BUCKET }}
-            export AUTH_URL=${{ secrets.PROD_AUTH_URL }}
-            export LAMBDA_URL=${{ secrets.PROD_LAMBDA_URL }}
-            export AUTH_TOKEN=${{ secrets.PROD_AUTH_TOKEN }}
+            export AWS_SECRET_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            export AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY_ID }}
+            export AWS_REGION=${{ secrets.AWS_REGION }}
+            export AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+            export AUTH_URL=${{ secrets.AUTH_URL }}
+            export LAMBDA_URL=${{ secrets.LAMBDA_URL }}
+            export AUTH_TOKEN=${{ secrets.AUTH_TOKEN }}
             
             /tmp/deploy-upload.sh
           SSHEOF
