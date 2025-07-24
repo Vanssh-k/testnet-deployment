@@ -73,7 +73,6 @@ RUN ipfs config Datastore.StorageMax 1EB && \
     ipfs config Import.UnixFSChunker "size-1048576" && \
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]' && \
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST", "OPTIONS"]' && \
-    ipfs config --json AutoGC.Enabled false && \
     ipfs config Reprovider.Interval "0" && \
     ipfs bootstrap rm --all
 
