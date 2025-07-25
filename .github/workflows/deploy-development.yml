@@ -110,13 +110,13 @@ jobs:
 
           # Verify environment variables are available
           echo "Checking environment variables..."
-          echo "AWS_SECRET_KEY: $AWS_SECRET_KEY"
-          echo "AWS_ACCESS_KEY: $AWS_ACCESS_KEY"
-          echo "AWS_REGION: $AWS_REGION"
-          echo "AWS_S3_BUCKET: $AWS_S3_BUCKET"
-          echo "AUTH_URL: $AUTH_URL"
-          echo "LAMBDA_URL: $LAMBDA_URL"
-          echo "AUTH_TOKEN: $AUTH_TOKEN"
+          echo "AWS_SECRET_KEY:" $AWS_SECRET_KEY
+          echo "AWS_ACCESS_KEY:" $AWS_ACCESS_KEY
+          echo "AWS_REGION:" $AWS_REGION
+          echo "AWS_S3_BUCKET:" $AWS_S3_BUCKET
+          echo "AUTH_URL:" $AUTH_URL
+          echo "LAMBDA_URL:" $LAMBDA_URL
+          echo "AUTH_TOKEN:" $AUTH_TOKEN
 
           # Start services using docker-compose with project name
           sudo --preserve-env docker-compose build --no-cache
@@ -147,13 +147,13 @@ jobs:
             export AUTH_TOKEN=${{ secrets.AUTH_TOKEN }}
             
             # Pass environment variables to the deployment script
-            AWS_SECRET_KEY=\$AWS_SECRET_KEY \
-            AWS_ACCESS_KEY=\$AWS_ACCESS_KEY \
-            AWS_REGION=\$AWS_REGION \
-            AWS_S3_BUCKET=\$AWS_S3_BUCKET \
-            AUTH_URL=\$AUTH_URL \
-            LAMBDA_URL=\$LAMBDA_URL \
-            AUTH_TOKEN=\$AUTH_TOKEN \
+            AWS_SECRET_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_REGION=${{ secrets.AWS_REGION }}
+            AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+            AUTH_URL=${{ secrets.AUTH_URL }}
+            LAMBDA_URL=${{ secrets.LAMBDA_URL }}
+            AUTH_TOKEN=${{ secrets.AUTH_TOKEN }}
             /tmp/deploy-upload.sh
           SSHEOF
 
