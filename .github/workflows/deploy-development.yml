@@ -173,34 +173,57 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'DOCKER_CHECK'
             cd upload
             
-            # Check if our docker-compose containers are running
-            if ! sudo docker-compose -p upload-service ps --services | xargs -I {} sudo docker-compose -p upload-service ps {} | grep -q "Up"; then
-              echo "ERROR: Upload service Docker containers are not running!"
-              sudo docker-compose -p upload-service ps
+            # Check if our docker-compose containers are running using docker commands
+            echo "Checking upload service containers using docker commands..."
+            
+            # Get containers for our project
+            project_containers=$(sudo docker ps --filter "label=com.docker.compose.project=upload-service" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}")
+            
+            if [ -z "$project_containers" ]; then
+              echo "ERROR: No upload service containers found!"
+              echo "All running containers:"
+              sudo docker ps
               exit 1
             fi
             
-            # Check our container health status
-            echo "Upload service container status:"
-            sudo docker-compose -p upload-service ps
+            echo "Upload service containers:"
+            echo "$project_containers"
             
-            # Check for any of our containers in unhealthy state
-            if sudo docker-compose -p upload-service ps | grep -E "(unhealthy|Exit|Restarting)" | grep -v "Paused"; then
-              echo "ERROR: Some upload service containers are unhealthy or have exited!"
-              sudo docker-compose -p upload-service logs --tail=50
+            # Check for any containers that are not running
+            non_running_containers=$(sudo docker ps --filter "label=com.docker.compose.project=upload-service" --filter "status=exited" --filter "status=dead" --format "{{.Names}}")
+            
+            if [ -n "$non_running_containers" ]; then
+              echo "ERROR: Some upload service containers are not running!"
+              echo "Non-running containers: $non_running_containers"
+              sudo docker ps -a --filter "label=com.docker.compose.project=upload-service"
               exit 1
             fi
             
-            # Verify all our services are running
+            # Check for unhealthy containers
+            unhealthy_containers=$(sudo docker ps --filter "label=com.docker.compose.project=upload-service" --filter "health=unhealthy" --format "{{.Names}}")
+            
+            if [ -n "$unhealthy_containers" ]; then
+              echo "ERROR: Some upload service containers are unhealthy!"
+              echo "Unhealthy containers: $unhealthy_containers"
+              sudo docker logs --tail=50 $unhealthy_containers
+              exit 1
+            fi
+            
+            # Verify all expected services are running
+            echo "Verifying all expected services are running..."
             expected_services=$(sudo docker-compose -p upload-service config --services)
-            running_services=$(sudo docker-compose -p upload-service ps --services --filter "status=running")
+            running_containers=$(sudo docker ps --filter "label=com.docker.compose.project=upload-service" --format "{{.Names}}")
             
-            if [ "$expected_services" != "$running_services" ]; then
-              echo "ERROR: Not all expected upload services are running!"
-              echo "Expected services: $expected_services"
-              echo "Running services: $running_services"
-              exit 1
-            fi
+            echo "Expected services: $expected_services"
+            echo "Running containers: $running_containers"
+            
+            # Check if all expected services have running containers
+            for service in $expected_services; do
+              if ! echo "$running_containers" | grep -q "upload-service_${service}_"; then
+                echo "ERROR: Service '$service' is not running!"
+                exit 1
+              fi
+            done
             
             echo "All upload service Docker containers are running and healthy!"
           DOCKER_CHECK
