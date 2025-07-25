@@ -99,9 +99,30 @@ jobs:
           # Copy upload service files to current directory
           cd upload
           
+          # Create .env file with environment variables
+          cat > .env << EOF
+          AWS_SECRET_KEY=\$AWS_SECRET_KEY
+          AWS_ACCESS_KEY=\$AWS_ACCESS_KEY
+          AWS_REGION=\$AWS_REGION
+          AWS_S3_BUCKET=\$AWS_S3_BUCKET
+          AUTH_URL=\$AUTH_URL
+          LAMBDA_URL=\$LAMBDA_URL
+          AUTH_TOKEN=\$AUTH_TOKEN
+          EOF
+          
           # Start services using docker-compose with project name
           sudo --preserve-env docker-compose build --no-cache
           sudo --preserve-env docker-compose up -d
+          
+          # Verify environment variables are available
+          echo "Checking environment variables..."
+          echo "AWS_SECRET_KEY: \$AWS_SECRET_KEY"
+          echo "AWS_ACCESS_KEY: \$AWS_ACCESS_KEY"
+          echo "AWS_REGION: \$AWS_REGION"
+          echo "AWS_S3_BUCKET: \$AWS_S3_BUCKET"
+          echo "AUTH_URL: \$AUTH_URL"
+          echo "LAMBDA_URL: \$LAMBDA_URL"
+          echo "AUTH_TOKEN: \$AUTH_TOKEN"
           
           echo "Upload service deployment completed successfully!"
           EOF
@@ -113,7 +134,7 @@ jobs:
           scp -o StrictHostKeyChecking=no -i private_key deploy-upload.sh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/
           
           # Execute deployment on server using the SSH key file
-          ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'SSHEOF'
+          ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << SSHEOF
             # Make deployment script executable and run
             chmod +x /tmp/deploy-upload.sh
             
@@ -126,6 +147,14 @@ jobs:
             export LAMBDA_URL=${{ secrets.LAMBDA_URL }}
             export AUTH_TOKEN=${{ secrets.AUTH_TOKEN }}
             
+            # Pass environment variables to the deployment script
+            AWS_SECRET_KEY=\$AWS_SECRET_KEY \
+            AWS_ACCESS_KEY=\$AWS_ACCESS_KEY \
+            AWS_REGION=\$AWS_REGION \
+            AWS_S3_BUCKET=\$AWS_S3_BUCKET \
+            AUTH_URL=\$AUTH_URL \
+            LAMBDA_URL=\$LAMBDA_URL \
+            AUTH_TOKEN=\$AUTH_TOKEN \
             /tmp/deploy-upload.sh
           SSHEOF
 
