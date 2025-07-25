@@ -77,17 +77,34 @@ jobs:
           # Navigate to application directory
           cd deployment
           
-          # Complete Docker cleanup
-          echo "Performing complete Docker cleanup..."
+          # Complete Docker cleanup for upload-service
+          echo "Performing Docker cleanup for upload-service..."
           sudo docker-compose -p upload-service down --remove-orphans --volumes || true
-          sudo docker system prune -af
-          sudo docker volume prune -f
-          sudo docker container prune -f
+
+          # Stop only upload-service containers
+          echo "Stopping upload-service containers..."
+          sudo docker stop $(sudo docker ps -q --filter "label=com.docker.compose.project=upload-service") 2>/dev/null || true
+
+          # Remove only upload-service containers
+          echo "Removing upload-service containers..."
+          sudo docker rm -f $(sudo docker ps -aq --filter "label=com.docker.compose.project=upload-service") 2>/dev/null || true
+
+          # Remove only upload-service images
+          echo "Removing upload-service images..."
+          sudo docker rmi -f $(sudo docker images -q --filter "label=com.docker.compose.project=upload-service") 2>/dev/null || true
+
+          # Clean up dangling images that might be related to upload-service
+          echo "Cleaning up dangling images..."
           sudo docker image prune -af
-          
-          # Remove any remaining containers and images
-          sudo docker container ls -aq | xargs -r sudo docker container rm -f
-          sudo docker image ls -aq | xargs -r sudo docker image rm -f
+
+          # Clean up unused volumes (only those not used by other services)
+          echo "Cleaning up unused volumes..."
+          sudo docker volume prune -f
+
+          # Final verification for upload-service
+          echo "Upload-service cleanup completed. Current state:"
+          echo "Upload-service containers: $(sudo docker ps -aq --filter "label=com.docker.compose.project=upload-service" | wc -l)"
+          echo "Upload-service images: $(sudo docker images -q --filter "label=com.docker.compose.project=upload-service" | wc -l)"
           
           # Clone or pull the repository
           echo "Current directory: $(pwd)"
