@@ -99,29 +99,29 @@ jobs:
           # Copy upload service files to current directory
           cd upload
           
+          # Export environment variables for docker-compose BEFORE building
+          export AWS_SECRET_KEY=$AWS_SECRET_KEY
+          export AWS_ACCESS_KEY=$AWS_ACCESS_KEY
+          export AWS_REGION=$AWS_REGION
+          export AWS_S3_BUCKET=$AWS_S3_BUCKET
+          export AUTH_URL=$AUTH_URL
+          export LAMBDA_URL=$LAMBDA_URL
+          export AUTH_TOKEN=$AUTH_TOKEN
+          
           # Start services using docker-compose with project name
           sudo --preserve-env docker-compose build --no-cache
-          
-          # Export environment variables for docker-compose
-          export AWS_SECRET_KEY=\$AWS_SECRET_KEY
-          export AWS_ACCESS_KEY=\$AWS_ACCESS_KEY
-          export AWS_REGION=\$AWS_REGION
-          export AWS_S3_BUCKET=\$AWS_S3_BUCKET
-          export AUTH_URL=\$AUTH_URL
-          export LAMBDA_URL=\$LAMBDA_URL
-          export AUTH_TOKEN=\$AUTH_TOKEN
           
           sudo --preserve-env docker-compose up -d
           
           # Verify environment variables are available
           echo "Checking environment variables..."
-          echo "AWS_SECRET_KEY: \$AWS_SECRET_KEY"
-          echo "AWS_ACCESS_KEY: \$AWS_ACCESS_KEY"
-          echo "AWS_REGION: \$AWS_REGION"
-          echo "AWS_S3_BUCKET: \$AWS_S3_BUCKET"
-          echo "AUTH_URL: \$AUTH_URL"
-          echo "LAMBDA_URL: \$LAMBDA_URL"
-          echo "AUTH_TOKEN: \$AUTH_TOKEN"
+          echo "AWS_SECRET_KEY: $AWS_SECRET_KEY"
+          echo "AWS_ACCESS_KEY: $AWS_ACCESS_KEY"
+          echo "AWS_REGION: $AWS_REGION"
+          echo "AWS_S3_BUCKET: $AWS_S3_BUCKET"
+          echo "AUTH_URL: $AUTH_URL"
+          echo "LAMBDA_URL: $LAMBDA_URL"
+          echo "AUTH_TOKEN: $AUTH_TOKEN"
           
           echo "Upload service deployment completed successfully!"
           EOF
