@@ -12,6 +12,14 @@ services:
         - AUTH_URL=${AUTH_URL}
         - LAMBDA_URL=${LAMBDA_URL}
         - AUTH_TOKEN=${AUTH_TOKEN}
+    environment:
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - AUTH_URL=${AUTH_URL}
+      - LAMBDA_URL=${LAMBDA_URL}
+      - AUTH_TOKEN=${AUTH_TOKEN}
     ports:
       - "8080:80"
     volumes:
