@@ -78,7 +78,9 @@ jobs:
           cd deployment
           
           # Stop existing containers
-          docker-compose down || true
+          sudo docker-compose down || true
+
+          sudo docker system prune -af || true
 
           # Clone or pull the repository
           echo "Current directory: $(pwd)"
