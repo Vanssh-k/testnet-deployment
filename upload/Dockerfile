@@ -3,22 +3,13 @@ FROM golang:1.24
 
 LABEL maintainer "Ravish <ravish@lighthouse.storage>"
 
-# defining args to be passed in at build time
-ARG AWS_SECRET_KEY
-ARG AWS_ACCESS_KEY
-ARG AWS_REGION
-ARG AWS_S3_BUCKET
-ARG AUTH_URL
-ARG LAMBDA_URL
-ARG AUTH_TOKEN
-
 ENV AWS_SECRET_KEY     $AWS_SECRET_KEY
 ENV AWS_ACCESS_KEY     $AWS_ACCESS_KEY
 ENV AWS_REGION         $AWS_REGION
 ENV AWS_S3_BUCKET      $AWS_S3_BUCKET
-ENV AUTH_URL        $AUTH_URL
-ENV LAMBDA_URL      $LAMBDA_URL
-ENV AUTH_TOKEN      $AUTH_TOKEN
+ENV AUTH_URL           $AUTH_URL
+ENV LAMBDA_URL         $LAMBDA_URL
+ENV AUTH_TOKEN         $AUTH_TOKEN
 
 # Install dependencies
 RUN apt update -y && \
@@ -37,7 +28,7 @@ ENV PATH="/usr/local/openresty/bin:/usr/local/openresty/nginx/sbin:$PATH"
 
 # Create config directory and copy template
 RUN mkdir -p /etc/nginx/lua
-COPY lua/config.lua /etc/nginx/lua/config.lua
+COPY lua/config.lua.template /etc/nginx/lua/config.lua.template
 COPY lua/auth.lua /etc/nginx/lua/auth.lua
 COPY lua/dag_handlers.lua /etc/nginx/lua/dag_handlers.lua
 COPY lua/utils.lua /etc/nginx/lua/utils.lua
@@ -98,10 +89,11 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Entrypoint script
 RUN echo '#!/bin/sh' > /entrypoint.sh && \
     echo 'set -e' >> /entrypoint.sh && \
-    echo 'trap "kill -TERM $IPFS_PID $NGINX_PID" TERM INT' >> /entrypoint.sh && \
-    echo 'mkdir -p /var/log/ipfs' >> /entrypoint.sh && \
-    echo 'echo "Starting IPFS daemon with restart loop..."' >> /entrypoint.sh && \
-    echo '(while true; do echo "[IPFS] Launching..."; ipfs daemon 2>&1 | tee /dev/stdout & tee /dev/stderrs; echo "[IPFS] Crashed. Restarting in 10 seconds..." >&2; sleep 10; done) &' >> /entrypoint.sh && \
+    echo 'sed -e "s|{{AUTH_URL}}|${AUTH_URL}|g" \' >> /entrypoint.sh && \
+    echo '    -e "s|{{LAMBDA_URL}}|${LAMBDA_URL}|g" \' >> /entrypoint.sh && \
+    echo '    -e "s|{{AUTH_TOKEN}}|${AUTH_TOKEN}|g" \' >> /entrypoint.sh && \
+    echo '    /etc/nginx/lua/config.lua.template > /etc/nginx/lua/config.lua' >> /entrypoint.sh && \
+    echo 'ipfs daemon &' >> /entrypoint.sh && \
     echo 'IPFS_PID=$!' >> /entrypoint.sh && \
     echo 'sleep 5' >> /entrypoint.sh && \
     echo 'echo "Starting OpenResty (Nginx)..."' >> /entrypoint.sh && \
