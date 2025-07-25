@@ -77,11 +77,18 @@ jobs:
           # Navigate to application directory
           cd deployment
           
-          # Stop existing containers
-          sudo docker-compose down || true
-
+          # Complete Docker cleanup
+          echo "Performing complete Docker cleanup..."
+          sudo docker-compose -p upload-service down --remove-orphans --volumes || true
           sudo docker system prune -af
-
+          sudo docker volume prune -f
+          sudo docker container prune -f
+          sudo docker image prune -af
+          
+          # Remove any remaining containers and images
+          sudo docker container ls -aq | xargs -r sudo docker container rm -f
+          sudo docker image ls -aq | xargs -r sudo docker image rm -f
+          
           # Clone or pull the repository
           echo "Current directory: $(pwd)"
           echo "Git directory exists: $([ -d ".git" ] && echo "YES" || echo "NO")"
@@ -118,10 +125,10 @@ jobs:
           echo "LAMBDA_URL:" $LAMBDA_URL
           echo "AUTH_TOKEN:" $AUTH_TOKEN
 
-          # Start services using docker-compose with project name
-          sudo --preserve-env docker-compose build --no-cache
+          # Start services using docker-compose with project name and force recreation
+          sudo --preserve-env docker-compose -p upload-service build --no-cache
           
-          sudo --preserve-env docker-compose up -d
+          sudo --preserve-env docker-compose -p upload-service up -d --force-recreate --remove-orphans
           
           echo "Upload service deployment completed successfully!"
           EOF
