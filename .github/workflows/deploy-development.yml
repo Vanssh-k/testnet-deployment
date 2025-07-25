@@ -107,12 +107,7 @@ jobs:
           export AUTH_URL=$AUTH_URL
           export LAMBDA_URL=$LAMBDA_URL
           export AUTH_TOKEN=$AUTH_TOKEN
-          
-          # Start services using docker-compose with project name
-          sudo --preserve-env docker-compose build --no-cache
-          
-          sudo --preserve-env docker-compose up -d
-          
+
           # Verify environment variables are available
           echo "Checking environment variables..."
           echo "AWS_SECRET_KEY: $AWS_SECRET_KEY"
@@ -122,6 +117,11 @@ jobs:
           echo "AUTH_URL: $AUTH_URL"
           echo "LAMBDA_URL: $LAMBDA_URL"
           echo "AUTH_TOKEN: $AUTH_TOKEN"
+
+          # Start services using docker-compose with project name
+          sudo --preserve-env docker-compose build --no-cache
+          
+          sudo --preserve-env docker-compose up -d
           
           echo "Upload service deployment completed successfully!"
           EOF
